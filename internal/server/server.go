@@ -1,11 +1,11 @@
 package server
 
 import (
-	"log"
 	"strings"
 
 	"github.com/tidwall/redcon"
 
+	"github.com/luiz-simples/keyp.git/internal/logger"
 	"github.com/luiz-simples/keyp.git/internal/storage"
 )
 
@@ -47,14 +47,14 @@ func (server *Server) Close() error {
 }
 
 func (server *Server) handleConnect(conn redcon.Conn) bool {
-	log.Printf("Client connected: %s", conn.RemoteAddr())
+	logger.Debug("Client connected", "addr", conn.RemoteAddr())
 	return true
 }
 
 func (server *Server) handleClose(conn redcon.Conn, err error) {
-	log.Printf("Client disconnected: %s", conn.RemoteAddr())
+	logger.Debug("Client disconnected", "addr", conn.RemoteAddr())
 	if hasError(err) {
-		log.Printf("Connection error: %v", err)
+		logger.Error("Connection error", "error", err)
 	}
 }
 

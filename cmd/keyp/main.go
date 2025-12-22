@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/luiz-simples/keyp.git/internal/logger"
 	"github.com/luiz-simples/keyp.git/internal/server"
 )
 
@@ -35,7 +35,7 @@ func main() {
 
 	srv, err := server.New(addr, *dataDir)
 	if hasError(err) {
-		log.Fatalf("Failed to create server: %v", err)
+		logger.Fatal("Failed to create server", "error", err)
 	}
 
 	c := make(chan os.Signal, signalBufferSize)
@@ -43,14 +43,14 @@ func main() {
 
 	go func() {
 		<-c
-		log.Println("Shutting down server...")
+		logger.Info("Shutting down server...")
 		srv.Close()
 		os.Exit(successExitCode)
 	}()
 
-	log.Printf("Keyp server starting on %s", addr)
+	logger.Info("Keyp server starting", "addr", addr)
 
 	if err := srv.ListenAndServe(); hasError(err) {
-		log.Fatalf("Server error: %v", err)
+		logger.Fatal("Server error", "error", err)
 	}
 }

@@ -23,6 +23,9 @@ var _ = Describe("TTL Commands Integration Tests", func() {
 	BeforeEach(func() {
 		ctx = context.Background()
 
+		// Set test mode to disable logging during tests
+		os.Setenv("KEYP_TEST_MODE", "true")
+
 		var err error
 		tmpDir, err = os.MkdirTemp("", "ttl-cmd-test-*")
 		Expect(err).NotTo(HaveOccurred())

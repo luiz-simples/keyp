@@ -23,6 +23,9 @@ var _ = Describe("Integration Tests", func() {
 	BeforeEach(func() {
 		ctx = context.Background()
 
+		// Set test mode to disable logging during tests
+		os.Setenv("KEYP_TEST_MODE", "true")
+
 		var err error
 		tmpDir, err = os.MkdirTemp("", "keyp-test-*")
 		Expect(err).NotTo(HaveOccurred())
@@ -489,6 +492,268 @@ var _ = Describe("Integration Tests", func() {
 				result = client.Do(ctx, "PTTL", "key1", "key2")
 				Expect(result.Err()).To(HaveOccurred())
 				Expect(result.Err().Error()).To(ContainSubstring("wrong number of arguments"))
+			})
+		})
+
+		Describe("PERSIST command via go-redis", func() {
+			It("should remove TTL from keys with expiration", func() {
+				// Test PERSIST command via Redis client on keys with TTL
+				// _Requirements: 3.1, 3.2, 3.3_
+
+				testCases := []struct {
+					key   string
+					value string
+					ttl   int64
+				}{
+					{"persist:key1", "value1", 30},
+					{"persist:key2", "value2", 3600},
+					{"persist:key3", "value3", 86400}, // 1 day
+				}
+
+				for _, tc := range testCases {
+					// Set key first
+					err := client.Set(ctx, tc.key, tc.value, 0).Err()
+					Expect(err).NotTo(HaveOccurred())
+
+					// Set TTL using EXPIRE command
+					result := client.Expire(ctx, tc.key, time.Duration(tc.ttl)*time.Second)
+					Expect(result.Err()).NotTo(HaveOccurred())
+					Expect(result.Val()).To(BeTrue())
+
+					// Verify TTL is set
+					ttlResult := client.Do(ctx, "TTL", tc.key)
+					Expect(ttlResult.Err()).NotTo(HaveOccurred())
+					ttlValue, ok := ttlResult.Val().(int64)
+					Expect(ok).To(BeTrue())
+					Expect(ttlValue).To(BeNumerically(">", 0))
+
+					// Use PERSIST command to remove TTL
+					persistResult := client.Do(ctx, "PERSIST", tc.key)
+					Expect(persistResult.Err()).NotTo(HaveOccurred())
+					Expect(persistResult.Val()).To(Equal(int64(1))) // Should return 1 for success
+
+					// Verify TTL is removed (should return -1 for persistent)
+					ttlAfterPersist := client.Do(ctx, "TTL", tc.key)
+					Expect(ttlAfterPersist.Err()).NotTo(HaveOccurred())
+					Expect(ttlAfterPersist.Val()).To(Equal(int64(-1)))
+
+					// Verify key still exists and has correct value
+					val, err := client.Get(ctx, tc.key).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(val).To(Equal(tc.value))
+				}
+			})
+
+			It("should return 0 for persistent keys (already no TTL)", func() {
+				// Test PERSIST command on persistent and non-existent keys
+				// _Requirements: 3.2, 3.3_
+
+				key := "already:persistent:key"
+				value := "persistent:value"
+
+				// Set key without TTL (persistent)
+				err := client.Set(ctx, key, value, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				// Verify key is persistent
+				ttlResult := client.Do(ctx, "TTL", key)
+				Expect(ttlResult.Err()).NotTo(HaveOccurred())
+				Expect(ttlResult.Val()).To(Equal(int64(-1)))
+
+				// Use PERSIST command on already persistent key
+				persistResult := client.Do(ctx, "PERSIST", key)
+				Expect(persistResult.Err()).NotTo(HaveOccurred())
+				Expect(persistResult.Val()).To(Equal(int64(0))) // Should return 0 for no change
+
+				// Verify key is still persistent
+				ttlAfterPersist := client.Do(ctx, "TTL", key)
+				Expect(ttlAfterPersist.Err()).NotTo(HaveOccurred())
+				Expect(ttlAfterPersist.Val()).To(Equal(int64(-1)))
+
+				// Verify key still exists
+				val, err := client.Get(ctx, key).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal(value))
+			})
+
+			It("should return 0 for non-existent keys", func() {
+				// Test PERSIST command on non-existent keys
+				// _Requirements: 3.3_
+
+				nonExistentKey := "non:existent:persist:key"
+
+				// Use PERSIST command on non-existent key
+				persistResult := client.Do(ctx, "PERSIST", nonExistentKey)
+				Expect(persistResult.Err()).NotTo(HaveOccurred())
+				Expect(persistResult.Val()).To(Equal(int64(0))) // Should return 0 for failure
+
+				// Verify key doesn't exist
+				_, err := client.Get(ctx, nonExistentKey).Result()
+				Expect(err).To(Equal(redis.Nil))
+			})
+
+			It("should validate PERSIST idempotency via multiple calls", func() {
+				// Test PERSIST idempotency via multiple calls
+				// _Requirements: 3.1_
+
+				key := "idempotent:persist:key"
+				value := "idempotent:value"
+				ttl := int64(120)
+
+				// Set key with TTL
+				err := client.Set(ctx, key, value, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				result := client.Expire(ctx, key, time.Duration(ttl)*time.Second)
+				Expect(result.Err()).NotTo(HaveOccurred())
+				Expect(result.Val()).To(BeTrue())
+
+				// First PERSIST - should succeed
+				persistResult1 := client.Do(ctx, "PERSIST", key)
+				Expect(persistResult1.Err()).NotTo(HaveOccurred())
+				Expect(persistResult1.Val()).To(Equal(int64(1)))
+
+				// Verify TTL is removed
+				ttlResult := client.Do(ctx, "TTL", key)
+				Expect(ttlResult.Err()).NotTo(HaveOccurred())
+				Expect(ttlResult.Val()).To(Equal(int64(-1)))
+
+				// Second PERSIST - should return 0 (no change)
+				persistResult2 := client.Do(ctx, "PERSIST", key)
+				Expect(persistResult2.Err()).NotTo(HaveOccurred())
+				Expect(persistResult2.Val()).To(Equal(int64(0)))
+
+				// Third PERSIST - should still return 0 (idempotent)
+				persistResult3 := client.Do(ctx, "PERSIST", key)
+				Expect(persistResult3.Err()).NotTo(HaveOccurred())
+				Expect(persistResult3.Val()).To(Equal(int64(0)))
+
+				// Verify key is still persistent and exists
+				ttlFinal := client.Do(ctx, "TTL", key)
+				Expect(ttlFinal.Err()).NotTo(HaveOccurred())
+				Expect(ttlFinal.Val()).To(Equal(int64(-1)))
+
+				val, err := client.Get(ctx, key).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal(value))
+			})
+
+			It("should validate return codes and TTL removal behavior", func() {
+				// Validate return codes and TTL removal behavior
+				// _Requirements: 3.1, 3.2, 3.3_
+
+				key := "return:codes:key"
+				value := "return:value"
+
+				// Set key with TTL
+				err := client.Set(ctx, key, value, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				result := client.Expire(ctx, key, 60*time.Second)
+				Expect(result.Err()).NotTo(HaveOccurred())
+				Expect(result.Val()).To(BeTrue())
+
+				// Verify TTL exists before PERSIST
+				ttlBefore := client.Do(ctx, "TTL", key)
+				Expect(ttlBefore.Err()).NotTo(HaveOccurred())
+				ttlValue, ok := ttlBefore.Val().(int64)
+				Expect(ok).To(BeTrue())
+				Expect(ttlValue).To(BeNumerically(">", 0))
+
+				// PERSIST should return 1 and remove TTL
+				persistResult := client.Do(ctx, "PERSIST", key)
+				Expect(persistResult.Err()).NotTo(HaveOccurred())
+				Expect(persistResult.Val()).To(Equal(int64(1)))
+
+				// Verify TTL is completely removed
+				ttlAfter := client.Do(ctx, "TTL", key)
+				Expect(ttlAfter.Err()).NotTo(HaveOccurred())
+				Expect(ttlAfter.Val()).To(Equal(int64(-1)))
+
+				// Verify PTTL also returns -1
+				pttlAfter := client.Do(ctx, "PTTL", key)
+				Expect(pttlAfter.Err()).NotTo(HaveOccurred())
+				Expect(pttlAfter.Val()).To(Equal(int64(-1)))
+
+				// Key should still be accessible
+				val, err := client.Get(ctx, key).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal(value))
+			})
+
+			It("should return proper error messages for invalid PERSIST arguments", func() {
+				// Test command argument validation via Redis protocol
+				// _Requirements: 6.1_
+
+				// Test PERSIST with wrong number of arguments
+				result := client.Do(ctx, "PERSIST")
+				Expect(result.Err()).To(HaveOccurred())
+				Expect(result.Err().Error()).To(ContainSubstring("wrong number of arguments"))
+
+				result = client.Do(ctx, "PERSIST", "key1", "key2")
+				Expect(result.Err()).To(HaveOccurred())
+				Expect(result.Err().Error()).To(ContainSubstring("wrong number of arguments"))
+			})
+
+			It("should handle concurrent PERSIST operations", func() {
+				// Test concurrent PERSIST operations from multiple Redis clients
+				// _Requirements: 3.1_
+
+				numGoroutines := 3
+				keysPerGoroutine := 2
+				done := make(chan bool, numGoroutines)
+
+				for g := 0; g < numGoroutines; g++ {
+					go func(goroutineID int) {
+						defer GinkgoRecover()
+
+						// Create separate Redis client for each goroutine
+						testClient := redis.NewClient(&redis.Options{
+							Addr: "localhost:6380",
+						})
+						defer testClient.Close()
+
+						// Wait for client to connect
+						Eventually(func() error {
+							return testClient.Ping(ctx).Err()
+						}, "2s", "50ms").Should(Succeed())
+
+						for k := 0; k < keysPerGoroutine; k++ {
+							key := "concurrent:persist:" + string(rune(goroutineID)) + ":" + string(rune(k))
+							value := "value:" + string(rune(goroutineID)) + ":" + string(rune(k))
+
+							// Set key with TTL
+							err := testClient.Set(ctx, key, value, 0).Err()
+							Expect(err).NotTo(HaveOccurred())
+
+							result := testClient.Expire(ctx, key, time.Duration(3600+k)*time.Second)
+							Expect(result.Err()).NotTo(HaveOccurred())
+							Expect(result.Val()).To(BeTrue())
+
+							// Use PERSIST concurrently
+							persistResult := testClient.Do(ctx, "PERSIST", key)
+							Expect(persistResult.Err()).NotTo(HaveOccurred())
+							Expect(persistResult.Val()).To(Equal(int64(1)))
+
+							// Verify TTL is removed
+							ttlResult := testClient.Do(ctx, "TTL", key)
+							Expect(ttlResult.Err()).NotTo(HaveOccurred())
+							Expect(ttlResult.Val()).To(Equal(int64(-1)))
+
+							// Verify key still exists
+							val, err := testClient.Get(ctx, key).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(val).To(Equal(value))
+						}
+
+						done <- true
+					}(g)
+				}
+
+				// Wait for all goroutines to complete
+				for g := 0; g < numGoroutines; g++ {
+					Eventually(done).Should(Receive())
+				}
 			})
 		})
 

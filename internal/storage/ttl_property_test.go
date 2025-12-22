@@ -23,6 +23,9 @@ var _ = Describe("TTL Storage Property Tests", func() {
 	)
 
 	BeforeEach(func() {
+		// Set test mode to disable logging during tests
+		os.Setenv("KEYP_TEST_MODE", "true")
+
 		var err error
 		tmpDir, err = os.MkdirTemp("", "ttl-property-test-*")
 		Expect(err).NotTo(HaveOccurred())
@@ -243,6 +246,120 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 					nonExistentPTTL, err := ttlManager.GetPTTL(key)
 					if err != nil || nonExistentPTTL != storage.TTLNotFound {
+						return false
+					}
+
+					return true
+				},
+				gen.SliceOfN(10, gen.UInt8()),
+				gen.Int64Range(5, 300), // Use smaller range for more predictable timing
+			))
+
+			result := properties.Run(gopter.ConsoleReporter(false))
+			Expect(result).To(BeTrue())
+		})
+	})
+
+	Describe("Persist Operation Idempotency Properties", func() {
+		It("should satisfy persist operation idempotency property", func() {
+			parameters := gopter.DefaultTestParameters()
+			parameters.MinSuccessfulTests = 100
+
+			properties := gopter.NewProperties(parameters)
+
+			// **Feature: ttl-commands, Property 3: Persist Operation Idempotency**
+			// **Validates: Requirements 3.1**
+			properties.Property("persist operation idempotency", prop.ForAll(
+				func(key []byte, ttlSeconds int64) bool {
+					if len(key) == 0 || len(key) > storage.MaxKeySize {
+						return true
+					}
+
+					if ttlSeconds <= 0 || ttlSeconds > 3600 {
+						return true
+					}
+
+					testValue := []byte("test:value")
+
+					// Set the key in storage first
+					err := lmdbStorage.Set(key, testValue)
+					if err != nil {
+						return false
+					}
+
+					// Create TTL manager for testing
+					ttlManager := storage.NewLMDBTTLManager(lmdbStorage)
+
+					// Set TTL first
+					result, err := ttlManager.SetExpire(key, ttlSeconds)
+					if err != nil || result != storage.ExpireSuccess {
+						return false
+					}
+
+					// Verify TTL is set
+					ttl, err := ttlManager.GetTTL(key)
+					if err != nil || ttl <= 0 {
+						return false
+					}
+
+					// First PERSIST operation - should succeed
+					persistResult1, err := ttlManager.Persist(key)
+					if err != nil {
+						return false
+					}
+
+					if persistResult1 != storage.PersistSuccess {
+						return false
+					}
+
+					// Verify TTL is removed (should return -1 for persistent)
+					ttlAfterPersist, err := ttlManager.GetTTL(key)
+					if err != nil || ttlAfterPersist != storage.TTLPersistent {
+						return false
+					}
+
+					// Second PERSIST operation - should fail (idempotency test)
+					persistResult2, err := ttlManager.Persist(key)
+					if err != nil {
+						return false
+					}
+
+					if persistResult2 != storage.PersistFailure {
+						return false
+					}
+
+					// TTL should still be persistent
+					ttlAfterSecondPersist, err := ttlManager.GetTTL(key)
+					if err != nil || ttlAfterSecondPersist != storage.TTLPersistent {
+						return false
+					}
+
+					// Third PERSIST operation - should still fail (multiple idempotency)
+					persistResult3, err := ttlManager.Persist(key)
+					if err != nil {
+						return false
+					}
+
+					if persistResult3 != storage.PersistFailure {
+						return false
+					}
+
+					// Verify key still exists and has correct value
+					value, err := lmdbStorage.Get(key)
+					if err != nil || string(value) != string(testValue) {
+						return false
+					}
+
+					// Clean up
+					lmdbStorage.Del(key)
+
+					// Test PERSIST on non-existent key - should fail
+					nonExistentResult, err := ttlManager.Persist(key)
+					if err != nil {
+						return false
+					}
+
+					if nonExistentResult != storage.PersistFailure {
 						return false
 					}
 

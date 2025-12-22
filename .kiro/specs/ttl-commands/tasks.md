@@ -55,16 +55,16 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - Test TTL accuracy over time with multiple queries
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 2.7 Implement Persist method
+  - [x] 2.7 Implement Persist method
     - Add TTL removal functionality
     - Return appropriate status codes
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ] 2.8 Write property test for persist operation
+  - [x] 2.8 Write property test for persist operation
     - **Property 3: Persist Operation Idempotency**
     - **Validates: Requirements 3.1**
 
-  - [ ] 2.9 Write integration tests for PERSIST with go-redis
+  - [x] 2.9 Write integration tests for PERSIST with go-redis
     - Test PERSIST command via Redis client on keys with TTL
     - Test PERSIST command on persistent and non-existent keys
     - Validate return codes and TTL removal behavior

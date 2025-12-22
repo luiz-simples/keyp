@@ -18,6 +18,9 @@ var _ = Describe("TTL Manager Tests", func() {
 	)
 
 	BeforeEach(func() {
+		// Set test mode to disable logging during tests
+		os.Setenv("KEYP_TEST_MODE", "true")
+
 		var err error
 		tmpDir, err = os.MkdirTemp("", "ttl-manager-test-*")
 		Expect(err).NotTo(HaveOccurred())
