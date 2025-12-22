@@ -72,28 +72,28 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - _Requirements: 3.1, 3.2, 3.3_
 
 - [ ] 3. Implement automatic expiration system
-  - [ ] 3.1 Create expiration index for efficient cleanup
+  - [x] 3.1 Create expiration index for efficient cleanup
     - Implement time-based indexing structure
     - Add concurrent access protection
     - _Requirements: 4.1_
 
-  - [ ] 3.2 Implement lazy expiration on key access
+  - [x] 3.2 Implement lazy expiration on key access
     - Add IsExpired method to TTL manager
     - Integrate expiration checks in storage operations
     - _Requirements: 4.2, 4.3_
 
-  - [ ]* 3.3 Write property test for expiration consistency
+  - [x] 3.3 Write property test for expiration consistency
     - **Property 4: Expiration Consistency**
     - **Validates: Requirements 4.1, 4.2, 4.3**
 
-  - [ ]* 3.4 Write integration tests for automatic expiration with go-redis
+  - [x] 3.4 Write integration tests for automatic expiration with go-redis
     - Test key expiration via Redis client with short TTLs
     - Test lazy expiration on GET operations via Redis protocol
     - Test that expired keys return null via Redis client
     - Test cleanup behavior with multiple expired keys
     - _Requirements: 4.1, 4.2, 4.3_
 
-  - [ ] 3.5 Implement background cleanup process
+  - [x] 3.5 Implement background cleanup process
     - Create cleanup goroutine with configurable intervals
     - Add batch cleanup for expired keys
     - _Requirements: 4.1, 4.4_

@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"strings"
+	"time"
 
 	"github.com/tidwall/redcon"
 
@@ -10,9 +12,12 @@ import (
 )
 
 type Server struct {
-	addr    string
-	server  *redcon.Server
-	storage *storage.LMDBStorage
+	addr           string
+	server         *redcon.Server
+	storage        *storage.LMDBStorage
+	cleanupCtx     context.Context
+	cleanupCancel  context.CancelFunc
+	cleanupStopped chan struct{}
 }
 
 func New(addr, dataDir string) (*Server, error) {
@@ -21,9 +26,14 @@ func New(addr, dataDir string) (*Server, error) {
 		return nil, err
 	}
 
+	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
+
 	server := &Server{
-		addr:    addr,
-		storage: storage,
+		addr:           addr,
+		storage:        storage,
+		cleanupCtx:     cleanupCtx,
+		cleanupCancel:  cleanupCancel,
+		cleanupStopped: make(chan struct{}),
 	}
 
 	server.server = redcon.NewServer(addr,
@@ -36,10 +46,14 @@ func New(addr, dataDir string) (*Server, error) {
 }
 
 func (server *Server) ListenAndServe() error {
+	go server.startBackgroundCleanup()
 	return server.server.ListenAndServe()
 }
 
 func (server *Server) Close() error {
+	server.cleanupCancel()
+	<-server.cleanupStopped
+
 	if server.storage != nil {
 		server.storage.Close()
 	}
@@ -85,4 +99,30 @@ func (server *Server) handleCommand(conn redcon.Conn, cmd redcon.Command) {
 	}
 
 	handler(conn, cmd)
+}
+func (server *Server) startBackgroundCleanup() {
+	defer close(server.cleanupStopped)
+
+	ticker := time.NewTicker(getCleanupInterval())
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-server.cleanupCtx.Done():
+			return
+		case <-ticker.C:
+			server.performCleanup()
+		}
+	}
+}
+
+func (server *Server) performCleanup() {
+	ttlManager := server.storage.GetTTLManager()
+	err := ttlManager.CleanupExpired()
+	if hasError(err) {
+		logger.Error("Background cleanup failed", "error", err)
+		return
+	}
+
+	logger.Debug("Background cleanup completed")
 }

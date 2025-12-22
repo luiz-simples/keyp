@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"time"
 
 	"github.com/tidwall/redcon"
 
@@ -62,4 +63,7 @@ func handlePing(conn redcon.Conn, cmd redcon.Command) {
 
 func isKeyNotFoundError(err error) bool {
 	return errors.Is(err, storage.ErrKeyNotFound)
+}
+func getCleanupInterval() time.Duration {
+	return 60 * time.Second
 }

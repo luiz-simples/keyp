@@ -120,6 +120,16 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	expired, err := storage.ttlManager.IsExpired(key)
+	if hasError(err) {
+		return nil, err
+	}
+
+	if expired {
+		storage.cleanupExpiredKey(key)
+		return nil, ErrKeyNotFound
+	}
+
 	var value []byte
 
 	err = storage.env.View(func(txn *lmdb.Txn) error {
@@ -177,6 +187,10 @@ func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
 		return InitialDeleteCount, err
 	}
 
+	for _, key := range keys {
+		storage.cleanupTTLMetadata(key)
+	}
+
 	return deleted, nil
 }
 
@@ -186,4 +200,12 @@ func (storage *LMDBStorage) GetTTLStorage() TTLStorage {
 
 func (storage *LMDBStorage) GetTTLManager() TTLManager {
 	return storage.ttlManager
+}
+
+func (storage *LMDBStorage) cleanupExpiredKey(key []byte) {
+	storage.Del(key)
+}
+
+func (storage *LMDBStorage) cleanupTTLMetadata(key []byte) {
+	storage.ttlStorage.RemoveTTL(key)
 }
