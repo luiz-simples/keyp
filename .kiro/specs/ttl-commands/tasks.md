@@ -28,11 +28,11 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - Add time utilities and validation functions
     - _Requirements: 1.1, 1.2_
 
-  - [ ] 2.2 Write property test for TTL setting consistency
+  - [x] 2.2 Write property test for TTL setting consistency
     - **Property 1: TTL Setting Consistency**
     - **Validates: Requirements 1.1, 1.2**
 
-  - [ ] 2.3 Write integration tests for EXPIRE/EXPIREAT with go-redis
+  - [x] 2.3 Write integration tests for EXPIRE/EXPIREAT with go-redis
     - Test EXPIRE command via Redis client with various TTL values
     - Test EXPIREAT command via Redis client with Unix timestamps
     - Validate Redis protocol compatibility and response codes
