@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"os"
 
@@ -18,9 +19,10 @@ const (
 	DirPermissions     = 0755
 	FilePermissions    = 0644
 	MaxDatabases       = 1
-	MapSizeBytes       = 1 << 30
+	MapSizeBytes       = 4 << 30
 	NoFlags            = 0
 	InitialDeleteCount = 0
+	PerformanceFlags   = lmdb.WriteMap | lmdb.NoMetaSync | lmdb.NoSync | lmdb.MapAsync | lmdb.NoReadahead
 )
 
 type LMDBStorage struct {
@@ -53,7 +55,13 @@ func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
 		return nil, err
 	}
 
-	err = env.Open(dataDir, NoFlags, FilePermissions)
+	err = env.SetMaxReaders(126)
+	if HasError(err) {
+		env.Close()
+		return nil, err
+	}
+
+	err = env.Open(dataDir, PerformanceFlags, FilePermissions)
 	if HasError(err) {
 		env.Close()
 		return nil, err
@@ -212,5 +220,77 @@ func (storage *LMDBStorage) cleanupTTLMetadata(key []byte) {
 	err := storage.ttlStorage.RemoveTTL(key)
 	if HasError(err) {
 		return
+	}
+}
+func (storage *LMDBStorage) SetWithContext(ctx context.Context, key, value []byte) error {
+	err := storage.validateKey(key)
+	if HasError(err) {
+		return err
+	}
+
+	done := make(chan error, 1)
+
+	go func() {
+		done <- storage.env.Update(func(txn *lmdb.Txn) error {
+			return txn.Put(storage.dbi, key, value, NoFlags)
+		})
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-done:
+		return err
+	}
+}
+
+func (storage *LMDBStorage) GetWithContext(ctx context.Context, key []byte) ([]byte, error) {
+	err := storage.validateKey(key)
+	if HasError(err) {
+		return nil, err
+	}
+
+	type result struct {
+		value []byte
+		err   error
+	}
+
+	done := make(chan result, 1)
+
+	go func() {
+		var value []byte
+
+		err := storage.env.View(func(txn *lmdb.Txn) error {
+			ttlValue, ttlErr := txn.Get(storage.ttlStorage.GetTTLDBI(), key)
+
+			if !isNotFound(ttlErr) && !HasError(ttlErr) {
+				if isExpiredFromTTLData(ttlValue) {
+					return ErrKeyNotFound
+				}
+			}
+
+			val, getErr := txn.Get(storage.dbi, key)
+
+			if isNotFound(getErr) {
+				return ErrKeyNotFound
+			}
+
+			if HasError(getErr) {
+				return getErr
+			}
+
+			value = make([]byte, len(val))
+			copy(value, val)
+			return nil
+		})
+
+		done <- result{value: value, err: err}
+	}()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-done:
+		return res.value, res.err
 	}
 }

@@ -68,13 +68,19 @@ func (ttlStorage *LMDBTTLStorage) SetTTL(key []byte, expiresAt int64) error {
 		return err
 	}
 
-	metadata := &TTLMetadata{
-		Key:       key,
-		ExpiresAt: expiresAt,
-		CreatedAt: time.Now().Unix(),
+	metadata := getTTLMetadata()
+	metadata.ExpiresAt = expiresAt
+	metadata.CreatedAt = time.Now().Unix()
+
+	if cap(metadata.Key) < len(key) {
+		metadata.Key = make([]byte, len(key))
+	} else {
+		metadata.Key = metadata.Key[:len(key)]
 	}
+	copy(metadata.Key, key)
 
 	serialized := serializeTTLMetadata(metadata)
+	releaseTTLMetadata(metadata)
 
 	return ttlStorage.env.Update(func(txn *lmdb.Txn) error {
 		return txn.Put(ttlStorage.ttlDBI, key, serialized, NoFlags)
@@ -169,6 +175,8 @@ func (ttlStorage *LMDBTTLStorage) GetExpiredKeys(before int64) ([][]byte, error)
 				expiredKeys = append(expiredKeys, keyCopy)
 				count++
 			}
+
+			releaseTTLMetadata(metadata)
 		}
 
 		return nil

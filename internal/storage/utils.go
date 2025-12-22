@@ -2,9 +2,18 @@ package storage
 
 import (
 	"encoding/binary"
+	"sync"
 	"time"
 
 	"github.com/PowerDNS/lmdb-go/lmdb"
+)
+
+var (
+	ttlMetadataPool = sync.Pool{
+		New: func() any {
+			return &TTLMetadata{}
+		},
+	}
 )
 
 func HasError(err error) bool {
@@ -129,12 +138,26 @@ func deserializeTTLMetadata(data []byte, key []byte) (*TTLMetadata, error) {
 	expiresAt := int64(binary.BigEndian.Uint64(data[0:TimestampSize]))
 	createdAt := int64(binary.BigEndian.Uint64(data[TimestampSize : TimestampSize*2]))
 
-	keyCopy := make([]byte, len(key))
-	copy(keyCopy, key)
+	metadata := getTTLMetadata()
+	metadata.ExpiresAt = expiresAt
+	metadata.CreatedAt = createdAt
 
-	return &TTLMetadata{
-		Key:       keyCopy,
-		ExpiresAt: expiresAt,
-		CreatedAt: createdAt,
-	}, nil
+	if cap(metadata.Key) < len(key) {
+		metadata.Key = make([]byte, len(key))
+	} else {
+		metadata.Key = metadata.Key[:len(key)]
+	}
+	copy(metadata.Key, key)
+
+	return metadata, nil
+}
+
+func releaseTTLMetadata(metadata *TTLMetadata) {
+	metadata.Key = metadata.Key[:0]
+	metadata.ExpiresAt = 0
+	metadata.CreatedAt = 0
+	ttlMetadataPool.Put(metadata)
+}
+func getTTLMetadata() *TTLMetadata {
+	return ttlMetadataPool.Get().(*TTLMetadata) //nolint:errcheck
 }

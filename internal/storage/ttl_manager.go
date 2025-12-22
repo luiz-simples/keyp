@@ -118,6 +118,8 @@ func (manager *LMDBTTLManager) GetTTL(key []byte) (int64, error) {
 	}
 
 	remainingSeconds := calculateRemainingSeconds(metadata.ExpiresAt)
+	releaseTTLMetadata(metadata)
+
 	if isExpiredTime(remainingSeconds) {
 		return TTLNotFound, nil
 	}
@@ -148,6 +150,8 @@ func (manager *LMDBTTLManager) GetPTTL(key []byte) (int64, error) {
 	}
 
 	remainingMilliseconds := calculateRemainingMilliseconds(metadata.ExpiresAt)
+	releaseTTLMetadata(metadata)
+
 	if isExpiredTime(remainingMilliseconds) {
 		return TTLNotFound, nil
 	}
@@ -195,7 +199,10 @@ func (manager *LMDBTTLManager) IsExpired(key []byte) (bool, error) {
 		return false, err
 	}
 
-	return isKeyExpired(metadata.ExpiresAt), nil
+	expired := isKeyExpired(metadata.ExpiresAt)
+	releaseTTLMetadata(metadata)
+
+	return expired, nil
 }
 
 func (manager *LMDBTTLManager) CleanupExpired() error {

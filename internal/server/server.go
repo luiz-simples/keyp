@@ -18,6 +18,7 @@ type Server struct {
 	cleanupCtx     context.Context
 	cleanupCancel  context.CancelFunc
 	cleanupStopped chan struct{}
+	registry       *CommandRegistry
 }
 
 func New(addr, dataDir string) (*Server, error) {
@@ -40,6 +41,7 @@ func New(addr, dataDir string) (*Server, error) {
 		cleanupCtx:     cleanupCtx,
 		cleanupCancel:  cleanupCancel,
 		cleanupStopped: make(chan struct{}),
+		registry:       NewCommandRegistry(),
 	}
 
 	server.server = redcon.NewServer(addr,
@@ -84,27 +86,22 @@ func (server *Server) handleCommand(conn redcon.Conn, cmd redcon.Command) {
 		return
 	}
 
-	command := strings.ToUpper(string(cmd.Args[0]))
+	commandName := strings.ToUpper(string(cmd.Args[0]))
 
-	handlers := map[string]func(redcon.Conn, redcon.Command){
-		"PING":     handlePing,
-		"SET":      server.handleSet,
-		"GET":      server.handleGet,
-		"DEL":      server.handleDel,
-		"EXPIRE":   server.handleExpire,
-		"EXPIREAT": server.handleExpireAt,
-		"TTL":      server.handleTTL,
-		"PTTL":     server.handlePTTL,
-		"PERSIST":  server.handlePersist,
-	}
-
-	handler, exists := handlers[command]
+	metadata, exists := server.registry.GetCommand(commandName)
 	if !exists {
-		conn.WriteError("ERR unknown command '" + command + "'")
+		conn.WriteError("ERR unknown command '" + commandName + "'")
 		return
 	}
 
-	handler(conn, cmd)
+	err := server.registry.ValidateCommand(cmd, metadata)
+	if HasError(err) {
+		conn.WriteError(err.Error())
+		return
+	}
+
+	ctx := context.Background()
+	server.executeCommand(ctx, conn, cmd, metadata)
 }
 func (server *Server) startBackgroundCleanup() {
 	defer close(server.cleanupStopped)
@@ -131,4 +128,37 @@ func (server *Server) performCleanup() {
 	}
 
 	logger.Debug("Background cleanup completed")
+}
+func (server *Server) executeCommand(ctx context.Context, conn redcon.Conn, cmd redcon.Command, metadata *CommandMetadata) {
+	if metadata.Handler != nil {
+		metadata.Handler(ctx, conn, cmd)
+		return
+	}
+
+	commandName := metadata.Name
+	contextHandlers := map[string]func(context.Context, redcon.Conn, redcon.Command){
+		"SET": server.handleSet,
+	}
+
+	if handler, exists := contextHandlers[commandName]; exists {
+		handler(ctx, conn, cmd)
+		return
+	}
+
+	legacyHandlers := map[string]func(redcon.Conn, redcon.Command){
+		"GET":      server.handleGet,
+		"DEL":      server.handleDel,
+		"EXPIRE":   server.handleExpire,
+		"EXPIREAT": server.handleExpireAt,
+		"TTL":      server.handleTTL,
+		"PTTL":     server.handlePTTL,
+		"PERSIST":  server.handlePersist,
+	}
+
+	if handler, exists := legacyHandlers[commandName]; exists {
+		handler(conn, cmd)
+		return
+	}
+
+	conn.WriteError("ERR command '" + commandName + "' not implemented")
 }

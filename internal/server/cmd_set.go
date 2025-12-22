@@ -1,8 +1,12 @@
 package server
 
-import "github.com/tidwall/redcon"
+import (
+	"context"
 
-func (server *Server) handleSet(conn redcon.Conn, cmd redcon.Command) {
+	"github.com/tidwall/redcon"
+)
+
+func (server *Server) handleSet(ctx context.Context, conn redcon.Conn, cmd redcon.Command) {
 	if isInvalidManyArgs(cmd) {
 		conn.WriteError("ERR wrong number of arguments for 'set' command")
 		return
@@ -11,8 +15,12 @@ func (server *Server) handleSet(conn redcon.Conn, cmd redcon.Command) {
 	key := cmd.Args[firstArg]
 	value := cmd.Args[secondArg]
 
-	err := server.storage.Set(key, value)
+	err := server.storage.SetWithContext(ctx, key, value)
 	if HasError(err) {
+		if isContextCanceled(err) {
+			conn.WriteError("ERR operation canceled")
+			return
+		}
 		conn.WriteError(err.Error())
 		return
 	}

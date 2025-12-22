@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/tidwall/redcon"
@@ -73,4 +75,15 @@ func isKeyNotFoundError(err error) bool {
 }
 func getCleanupInterval() time.Duration {
 	return 60 * time.Second
+}
+func newInvalidArgsError(commandName string) error {
+	return errors.New("ERR wrong number of arguments for '" + commandName + "' command")
+}
+
+func normalizeCommandName(name string) string {
+	return strings.ToUpper(name)
+}
+
+func isContextCanceled(err error) bool {
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }

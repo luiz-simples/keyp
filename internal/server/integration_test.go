@@ -721,7 +721,7 @@ var _ = Describe("Integration Tests", func() {
 								Expect(result.Err()).NotTo(HaveOccurred())
 								Expect(result.Val()).To(BeTrue())
 							}
-			if k%2 != 0 {
+							if k%2 != 0 {
 								futureTime := time.Now().Add(time.Duration(3600+k) * time.Second)
 								result := testClient.ExpireAt(ctx, key, futureTime)
 								Expect(result.Err()).NotTo(HaveOccurred())
