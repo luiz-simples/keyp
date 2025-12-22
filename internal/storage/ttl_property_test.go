@@ -23,7 +23,6 @@ var _ = Describe("TTL Storage Property Tests", func() {
 	)
 
 	BeforeEach(func() {
-		// Set test mode to disable logging during tests
 		os.Setenv("KEYP_TEST_MODE", "true")
 
 		var err error
@@ -52,8 +51,6 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties := gopter.NewProperties(parameters)
 
-			// **Feature: ttl-commands, Property 1: TTL Setting Consistency**
-			// **Validates: Requirements 1.1, 1.2**
 			properties.Property("TTL setting consistency", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
 					if len(key) == 0 || len(key) > storage.MaxKeySize {
@@ -66,16 +63,13 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 					testValue := []byte("test:value")
 
-					// First set the key in storage (requirement for TTL operations)
 					err := lmdbStorage.Set(key, testValue)
 					if err != nil {
 						return false
 					}
 
-					// Create TTL manager for testing
 					ttlManager := storage.NewLMDBTTLManager(lmdbStorage)
 
-					// Test EXPIRE command (SetExpire method)
 					result, err := ttlManager.SetExpire(key, ttlSeconds)
 					if err != nil {
 						return false
@@ -85,25 +79,20 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// Verify TTL was set correctly within reasonable bounds
 					actualTTL, err := ttlManager.GetTTL(key)
 					if err != nil {
 						return false
 					}
 
-					// TTL should be within reasonable bounds (allowing for execution time)
-					// Should be positive and not exceed the original value
 					if actualTTL <= 0 || actualTTL > ttlSeconds {
 						return false
 					}
 
-					// TTL should be close to the set value (within 5 seconds tolerance for execution time)
 					tolerance := int64(5)
 					if ttlSeconds-actualTTL > tolerance {
 						return false
 					}
 
-					// Test EXPIREAT command (SetExpireAt method) with future timestamp
 					futureTimestamp := time.Now().Unix() + ttlSeconds
 					result, err = ttlManager.SetExpireAt(key, futureTimestamp)
 					if err != nil {
@@ -114,18 +103,15 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// Verify absolute expiration was set correctly
 					actualTTL, err = ttlManager.GetTTL(key)
 					if err != nil {
 						return false
 					}
 
-					// TTL should be within reasonable bounds for absolute timestamp
 					if actualTTL <= 0 || actualTTL > ttlSeconds {
 						return false
 					}
 
-					// Clean up for next iteration
 					lmdbStorage.Del(key)
 
 					return true
@@ -146,8 +132,6 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties := gopter.NewProperties(parameters)
 
-			// **Feature: ttl-commands, Property 2: TTL Query Accuracy**
-			// **Validates: Requirements 2.1, 2.4**
 			properties.Property("TTL query accuracy", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
 					if len(key) == 0 || len(key) > storage.MaxKeySize {
@@ -160,33 +144,27 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 					testValue := []byte("test:value")
 
-					// Set the key in storage first
 					err := lmdbStorage.Set(key, testValue)
 					if err != nil {
 						return false
 					}
 
-					// Create TTL manager for testing
 					ttlManager := storage.NewLMDBTTLManager(lmdbStorage)
 
-					// Set TTL using SetExpire
 					result, err := ttlManager.SetExpire(key, ttlSeconds)
 					if err != nil || result != storage.ExpireSuccess {
 						return false
 					}
 
-					// Test GetTTL accuracy - should return value close to original
 					actualTTL, err := ttlManager.GetTTL(key)
 					if err != nil {
 						return false
 					}
 
-					// TTL should be positive and within reasonable bounds
 					if actualTTL <= 0 || actualTTL > ttlSeconds {
 						return false
 					}
 
-					// TTL should decrease over time - wait a small amount and check again
 					time.Sleep(1 * time.Millisecond)
 
 					secondTTL, err := ttlManager.GetTTL(key)
@@ -194,37 +172,31 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// Second reading should be <= first reading (time has passed)
 					if secondTTL > actualTTL {
 						return false
 					}
 
-					// Test GetPTTL accuracy - should return milliseconds
 					actualPTTL, err := ttlManager.GetPTTL(key)
 					if err != nil {
 						return false
 					}
 
-					// PTTL should be positive and roughly 1000x the TTL value
 					if actualPTTL <= 0 {
 						return false
 					}
 
-					// PTTL should be in reasonable range (allowing for execution time)
 					expectedPTTLMin := (ttlSeconds - 5) * 1000
 					expectedPTTLMax := ttlSeconds * 1000
 					if actualPTTL < expectedPTTLMin || actualPTTL > expectedPTTLMax {
 						return false
 					}
 
-					// Test persistent key behavior
 					ttlStorageInstance := lmdbStorage.GetTTLStorage()
 					err = ttlStorageInstance.RemoveTTL(key)
 					if err != nil {
 						return false
 					}
 
-					// Should return -1 for persistent keys
 					persistentTTL, err := ttlManager.GetTTL(key)
 					if err != nil || persistentTTL != storage.TTLPersistent {
 						return false
@@ -235,10 +207,8 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// Clean up
 					lmdbStorage.Del(key)
 
-					// Test non-existent key behavior - should return -2
 					nonExistentTTL, err := ttlManager.GetTTL(key)
 					if err != nil || nonExistentTTL != storage.TTLNotFound {
 						return false
@@ -252,7 +222,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					return true
 				},
 				gen.SliceOfN(10, gen.UInt8()),
-				gen.Int64Range(5, 300), // Use smaller range for more predictable timing
+				gen.Int64Range(5, 300),
 			))
 
 			result := properties.Run(gopter.ConsoleReporter(false))
@@ -267,8 +237,6 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties := gopter.NewProperties(parameters)
 
-			// **Feature: ttl-commands, Property 3: Persist Operation Idempotency**
-			// **Validates: Requirements 3.1**
 			properties.Property("persist operation idempotency", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
 					if len(key) == 0 || len(key) > storage.MaxKeySize {
@@ -281,28 +249,23 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 					testValue := []byte("test:value")
 
-					// Set the key in storage first
 					err := lmdbStorage.Set(key, testValue)
 					if err != nil {
 						return false
 					}
 
-					// Create TTL manager for testing
 					ttlManager := storage.NewLMDBTTLManager(lmdbStorage)
 
-					// Set TTL first
 					result, err := ttlManager.SetExpire(key, ttlSeconds)
 					if err != nil || result != storage.ExpireSuccess {
 						return false
 					}
 
-					// Verify TTL is set
 					ttl, err := ttlManager.GetTTL(key)
 					if err != nil || ttl <= 0 {
 						return false
 					}
 
-					// First PERSIST operation - should succeed
 					persistResult1, err := ttlManager.Persist(key)
 					if err != nil {
 						return false
@@ -312,13 +275,11 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// Verify TTL is removed (should return -1 for persistent)
 					ttlAfterPersist, err := ttlManager.GetTTL(key)
 					if err != nil || ttlAfterPersist != storage.TTLPersistent {
 						return false
 					}
 
-					// Second PERSIST operation - should fail (idempotency test)
 					persistResult2, err := ttlManager.Persist(key)
 					if err != nil {
 						return false
@@ -328,13 +289,11 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// TTL should still be persistent
 					ttlAfterSecondPersist, err := ttlManager.GetTTL(key)
 					if err != nil || ttlAfterSecondPersist != storage.TTLPersistent {
 						return false
 					}
 
-					// Third PERSIST operation - should still fail (multiple idempotency)
 					persistResult3, err := ttlManager.Persist(key)
 					if err != nil {
 						return false
@@ -344,16 +303,13 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// Verify key still exists and has correct value
 					value, err := lmdbStorage.Get(key)
 					if err != nil || string(value) != string(testValue) {
 						return false
 					}
 
-					// Clean up
 					lmdbStorage.Del(key)
 
-					// Test PERSIST on non-existent key - should fail
 					nonExistentResult, err := ttlManager.Persist(key)
 					if err != nil {
 						return false
@@ -366,7 +322,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					return true
 				},
 				gen.SliceOfN(10, gen.UInt8()),
-				gen.Int64Range(5, 300), // Use smaller range for more predictable timing
+				gen.Int64Range(5, 300),
 			))
 
 			result := properties.Run(gopter.ConsoleReporter(false))
@@ -381,8 +337,6 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties := gopter.NewProperties(parameters)
 
-			// **Feature: ttl-commands, Property 5: TTL Persistence Round-trip**
-			// **Validates: Requirements 5.1, 5.2**
 			properties.Property("TTL persistence round-trip", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
 					if len(key) == 0 || len(key) > storage.MaxKeySize {
@@ -396,13 +350,11 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					now := time.Now().Unix()
 					expiresAt := now + ttlSeconds
 
-					// Set TTL metadata
 					err := ttlStorage.SetTTL(key, expiresAt)
 					if err != nil {
 						return false
 					}
 
-					// Verify TTL is set correctly before restart
 					metadata, err := ttlStorage.GetTTL(key)
 					if err != nil {
 						return false
@@ -412,11 +364,9 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// Simulate system restart by closing and reopening storage
 					originalTmpDir := tmpDir
 					lmdbStorage.Close()
 
-					// Reopen the same storage directory (simulating restart)
 					newStorage, err := storage.NewLMDBStorage(originalTmpDir)
 					if err != nil {
 						return false
@@ -424,21 +374,18 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 					newTTLStorage := newStorage.GetTTLStorage()
 
-					// Verify TTL metadata persisted across restart
 					restoredMetadata, err := newTTLStorage.GetTTL(key)
 					if err != nil {
 						newStorage.Close()
 						return false
 					}
 
-					// Verify all TTL information is preserved
 					success := restoredMetadata.ExpiresAt == expiresAt &&
 						string(restoredMetadata.Key) == string(key) &&
 						restoredMetadata.CreatedAt > 0
 
 					newStorage.Close()
 
-					// Restore original storage for cleanup
 					lmdbStorage, err = storage.NewLMDBStorage(originalTmpDir)
 					if err != nil {
 						return false
@@ -507,13 +454,11 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return true
 					}
 
-					// Use current time + random seed to ensure unique timestamps
 					baseTime := time.Now().Unix() + randomSeed%1000000
 
 					expiredCount := 0
 
-					for i := 0; i < keyCount; i++ {
-						// Use unique key with timestamp and random seed to avoid conflicts
+					for i := range keyCount {
 						key := []byte(fmt.Sprintf("prop:key:%d:%d:%d", baseTime, randomSeed, i))
 
 						if len(key) == 0 || len(key) > storage.MaxKeySize {
@@ -539,7 +484,6 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						return false
 					}
 
-					// Count only keys from this test run
 					actualExpiredCount := 0
 					keyPrefix := fmt.Sprintf("prop:key:%d:%d:", baseTime, randomSeed)
 					for _, expiredKey := range expiredKeys {

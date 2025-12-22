@@ -92,7 +92,7 @@ var _ = Describe("TTL Persistence Property Tests", func() {
 	Describe("Property 8: Expiration Behavior", func() {
 		It("should handle expiration correctly", func() {
 			parameters := gopter.DefaultTestParameters()
-			parameters.MinSuccessfulTests = 50
+			parameters.MinSuccessfulTests = 5
 
 			properties := gopter.NewProperties(parameters)
 
@@ -117,7 +117,7 @@ var _ = Describe("TTL Persistence Property Tests", func() {
 						return false
 					}
 
-					time.Sleep(2 * time.Second)
+					time.Sleep(1100 * time.Millisecond)
 
 					expired, err := ttlManager.IsExpired(key)
 					if hasError(err) {

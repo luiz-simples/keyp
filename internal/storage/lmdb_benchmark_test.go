@@ -1,228 +1,232 @@
-package storage_test
+package storage
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
-
-	"github.com/luiz-simples/keyp.git/internal/storage"
+	"time"
 )
 
-func BenchmarkLMDBStorage(b *testing.B) {
-	tmpDir, err := os.MkdirTemp("", "lmdb-benchmark-*")
+func BenchmarkTTLOperations(b *testing.B) {
+	tempDir, err := os.MkdirTemp("", "keyp_benchmark_ttl_*")
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll(tempDir)
 
-	lmdbStorage, err := storage.NewLMDBStorage(tmpDir)
+	storage, err := NewLMDBStorage(filepath.Join(tempDir, "benchmark.db"))
 	if err != nil {
-		b.Fatal(err)
-	}
-	defer lmdbStorage.Close()
-
-	b.Run("Set", func(b *testing.B) {
-		benchmarkSet(b, lmdbStorage)
-	})
-
-	b.Run("Get", func(b *testing.B) {
-		benchmarkGet(b)
-	})
-
-	b.Run("Del", func(b *testing.B) {
-		benchmarkDel(b)
-	})
-
-	b.Run("SetGetDel", func(b *testing.B) {
-		benchmarkSetGetDel(b, lmdbStorage)
-	})
-}
-
-func benchmarkSet(b *testing.B, storage *storage.LMDBStorage) {
-	key := []byte("benchmark-key")
-	value := []byte("benchmark-value-with-some-data")
-
-	b.ResetTimer()
-	b.ReportAllocs()
-
-	for i := 0; i < b.N; i++ {
-		keyWithIndex := append(key, []byte(fmt.Sprintf("-%d", i))...)
-		err := storage.Set(keyWithIndex, value)
-		if err != nil {
-			b.Fatal(err)
-		}
-	}
-}
-
-func benchmarkGet(b *testing.B) {
-	tmpDir, err := os.MkdirTemp("", "lmdb-benchmark-get-*")
-	if err != nil {
-		b.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	storage, err := storage.NewLMDBStorage(tmpDir)
-	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("Failed to create storage: %v", err)
 	}
 	defer storage.Close()
 
-	key := []byte("benchmark-key")
-	value := []byte("benchmark-value-with-some-data")
+	ttlManager := NewLMDBTTLManager(storage)
 
-	keys := make([][]byte, b.N)
-	for i := 0; i < b.N; i++ {
-		keyWithIndex := append(key, []byte(fmt.Sprintf("-%d", i))...)
-		keys[i] = keyWithIndex
-		err := storage.Set(keyWithIndex, value)
-		if err != nil {
-			b.Fatal(err)
+	b.Run("SetExpire", func(b *testing.B) {
+		keys := make([][]byte, b.N)
+		for i := 0; i < b.N; i++ {
+			key := []byte(fmt.Sprintf("benchmark_key_%d", i))
+			keys[i] = key
+			storage.Set(key, []byte("benchmark_value"))
 		}
-	}
 
-	b.ResetTimer()
-	b.ReportAllocs()
-
-	for i := 0; i < b.N; i++ {
-		_, err := storage.Get(keys[i])
-		if err != nil {
-			b.Fatal(err)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ttlManager.SetExpire(keys[i], 3600)
 		}
-	}
+	})
+
+	b.Run("SetExpireAt", func(b *testing.B) {
+		keys := make([][]byte, b.N)
+		timestamp := time.Now().Add(time.Hour).Unix()
+		for i := 0; i < b.N; i++ {
+			key := []byte(fmt.Sprintf("benchmark_expireat_key_%d", i))
+			keys[i] = key
+			storage.Set(key, []byte("benchmark_value"))
+		}
+
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ttlManager.SetExpireAt(keys[i], timestamp)
+		}
+	})
+
+	b.Run("GetTTL", func(b *testing.B) {
+		keys := make([][]byte, b.N)
+		for i := 0; i < b.N; i++ {
+			key := []byte(fmt.Sprintf("benchmark_ttl_key_%d", i))
+			keys[i] = key
+			storage.Set(key, []byte("benchmark_value"))
+			ttlManager.SetExpire(key, 3600)
+		}
+
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ttlManager.GetTTL(keys[i])
+		}
+	})
+
+	b.Run("GetPTTL", func(b *testing.B) {
+		keys := make([][]byte, b.N)
+		for i := 0; i < b.N; i++ {
+			key := []byte(fmt.Sprintf("benchmark_pttl_key_%d", i))
+			keys[i] = key
+			storage.Set(key, []byte("benchmark_value"))
+			ttlManager.SetExpire(key, 3600)
+		}
+
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ttlManager.GetPTTL(keys[i])
+		}
+	})
+
+	b.Run("Persist", func(b *testing.B) {
+		keys := make([][]byte, b.N)
+		for i := 0; i < b.N; i++ {
+			key := []byte(fmt.Sprintf("benchmark_persist_key_%d", i))
+			keys[i] = key
+			storage.Set(key, []byte("benchmark_value"))
+			ttlManager.SetExpire(key, 3600)
+		}
+
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ttlManager.Persist(keys[i])
+		}
+	})
+
+	b.Run("IsExpired", func(b *testing.B) {
+		keys := make([][]byte, b.N)
+		for i := 0; i < b.N; i++ {
+			key := []byte(fmt.Sprintf("benchmark_expired_key_%d", i))
+			keys[i] = key
+			storage.Set(key, []byte("benchmark_value"))
+			ttlManager.SetExpire(key, 3600)
+		}
+
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ttlManager.IsExpired(keys[i])
+		}
+	})
 }
 
-func benchmarkDel(b *testing.B) {
-	tmpDir, err := os.MkdirTemp("", "lmdb-benchmark-del-*")
+func BenchmarkTTLCleanup(b *testing.B) {
+	tempDir, err := os.MkdirTemp("", "keyp_benchmark_cleanup_*")
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll(tempDir)
 
-	storage, err := storage.NewLMDBStorage(tmpDir)
+	storage, err := NewLMDBStorage(filepath.Join(tempDir, "cleanup.db"))
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("Failed to create storage: %v", err)
 	}
 	defer storage.Close()
 
-	key := []byte("benchmark-key")
-	value := []byte("benchmark-value-with-some-data")
+	ttlManager := NewLMDBTTLManager(storage)
 
-	keys := make([][]byte, b.N)
+	b.Run("CleanupExpired_Small", func(b *testing.B) {
+		benchmarkCleanupWithSize(b, storage, ttlManager, 100)
+	})
+
+	b.Run("CleanupExpired_Medium", func(b *testing.B) {
+		benchmarkCleanupWithSize(b, storage, ttlManager, 1000)
+	})
+
+	b.Run("CleanupExpired_Large", func(b *testing.B) {
+		benchmarkCleanupWithSize(b, storage, ttlManager, 10000)
+	})
+}
+
+func benchmarkCleanupWithSize(b *testing.B, storage *LMDBStorage, ttlManager *LMDBTTLManager, keyCount int) {
 	for i := 0; i < b.N; i++ {
-		keyWithIndex := append(key, []byte(fmt.Sprintf("-%d", i))...)
-		keys[i] = keyWithIndex
-		err := storage.Set(keyWithIndex, value)
-		if err != nil {
-			b.Fatal(err)
-		}
-	}
+		b.StopTimer()
 
-	b.ResetTimer()
-	b.ReportAllocs()
-
-	for i := 0; i < b.N; i++ {
-		_, err := storage.Del(keys[i])
-		if err != nil {
-			b.Fatal(err)
+		for j := 0; j < keyCount; j++ {
+			key := []byte(fmt.Sprintf("cleanup_key_%d_%d", i, j))
+			storage.Set(key, []byte("cleanup_value"))
+			ttlManager.SetExpire(key, 1)
 		}
+
+		time.Sleep(2 * time.Second)
+
+		b.StartTimer()
+		ttlManager.CleanupExpired()
 	}
 }
 
-func benchmarkSetGetDel(b *testing.B, storage *storage.LMDBStorage) {
-	key := []byte("benchmark-key")
-	value := []byte("benchmark-value-with-some-data")
-
-	b.ResetTimer()
-	b.ReportAllocs()
-
-	for i := 0; i < b.N; i++ {
-		keyWithIndex := append(key, []byte(fmt.Sprintf("-%d", i))...)
-
-		err := storage.Set(keyWithIndex, value)
-		if err != nil {
-			b.Fatal(err)
-		}
-
-		_, err = storage.Get(keyWithIndex)
-		if err != nil {
-			b.Fatal(err)
-		}
-
-		_, err = storage.Del(keyWithIndex)
-		if err != nil {
-			b.Fatal(err)
-		}
-	}
-}
-
-func BenchmarkLMDBStorageVariousSizes(b *testing.B) {
-	tmpDir, err := os.MkdirTemp("", "lmdb-benchmark-sizes-*")
+func BenchmarkTTLConcurrent(b *testing.B) {
+	tempDir, err := os.MkdirTemp("", "keyp_benchmark_concurrent_*")
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("Failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer os.RemoveAll(tempDir)
 
-	storage, err := storage.NewLMDBStorage(tmpDir)
+	storage, err := NewLMDBStorage(filepath.Join(tempDir, "concurrent.db"))
 	if err != nil {
-		b.Fatal(err)
+		b.Fatalf("Failed to create storage: %v", err)
 	}
 	defer storage.Close()
 
-	sizes := []int{10, 100, 1024, 10240, 102400}
+	ttlManager := NewLMDBTTLManager(storage)
 
-	for _, size := range sizes {
-		b.Run(fmt.Sprintf("ValueSize%d", size), func(b *testing.B) {
-			benchmarkSetWithValueSize(b, storage, size)
-		})
-	}
-}
-
-func benchmarkSetWithValueSize(b *testing.B, storage *storage.LMDBStorage, valueSize int) {
-	key := []byte("benchmark-key")
-	value := make([]byte, valueSize)
-	for i := range value {
-		value[i] = byte(i % 256)
-	}
-
-	b.ResetTimer()
-	b.ReportAllocs()
-
-	for i := 0; i < b.N; i++ {
-		keyWithIndex := append(key, []byte(fmt.Sprintf("-%d", i))...)
-		err := storage.Set(keyWithIndex, value)
-		if err != nil {
-			b.Fatal(err)
-		}
-	}
-}
-
-func BenchmarkLMDBStorageConcurrent(b *testing.B) {
-	tmpDir, err := os.MkdirTemp("", "lmdb-benchmark-concurrent-*")
-	if err != nil {
-		b.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	storage, err := storage.NewLMDBStorage(tmpDir)
-	if err != nil {
-		b.Fatal(err)
-	}
-	defer storage.Close()
-
-	value := []byte("benchmark-value-concurrent")
-
-	b.ResetTimer()
-	b.ReportAllocs()
-
-	b.RunParallel(func(pb *testing.PB) {
-		i := 0
-		for pb.Next() {
-			key := []byte(fmt.Sprintf("concurrent-key-%d", i))
-			err := storage.Set(key, value)
-			if err != nil {
-				b.Fatal(err)
+	b.Run("ConcurrentSetExpire", func(b *testing.B) {
+		b.RunParallel(func(pb *testing.PB) {
+			i := 0
+			for pb.Next() {
+				key := []byte(fmt.Sprintf("concurrent_key_%d", i))
+				storage.Set(key, []byte("concurrent_value"))
+				ttlManager.SetExpire(key, 3600)
+				i++
 			}
-			i++
+		})
+	})
+
+	b.Run("ConcurrentGetTTL", func(b *testing.B) {
+		for i := 0; i < 1000; i++ {
+			key := []byte(fmt.Sprintf("concurrent_ttl_key_%d", i))
+			storage.Set(key, []byte("concurrent_value"))
+			ttlManager.SetExpire(key, 3600)
+		}
+
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			i := 0
+			for pb.Next() {
+				key := []byte(fmt.Sprintf("concurrent_ttl_key_%d", i%1000))
+				ttlManager.GetTTL(key)
+				i++
+			}
+		})
+	})
+}
+
+func BenchmarkTTLMetrics(b *testing.B) {
+	metrics := NewTTLMetrics()
+
+	b.Run("RecordCleanupOperations", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			startTime := metrics.RecordCleanupStart()
+			metrics.RecordCleanupEnd(startTime, 10)
+		}
+	})
+
+	b.Run("RecordTTLOperations", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			metrics.RecordTTLSet()
+			metrics.RecordTTLRemoved()
+		}
+	})
+
+	b.Run("GetMetrics", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			metrics.GetCleanupOperations()
+			metrics.GetKeysExpired()
+			metrics.GetKeysWithTTL()
+			metrics.GetAvgCleanupDuration()
 		}
 	})
 }

@@ -198,29 +198,29 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
   - _Requirements: 5.1, 5.2, 5.3_
 
 - [ ] 9. Performance optimization and monitoring
-  - [ ] 9.1 Add TTL performance metrics
+  - [x] 9.1 Add TTL performance metrics
     - Track cleanup performance and frequency
     - Monitor TTL storage overhead
     - _Requirements: 4.1, 4.4_
 
-  - [ ] 9.2 Optimize expiration index performance
+  - [x] 9.2 Optimize expiration index performance
     - Implement efficient time-based lookups
     - Add batch operations for cleanup
     - _Requirements: 4.1_
 
-- [ ]* 9.3 Write benchmark tests for TTL operations
+- [x] 9.3 Write benchmark tests for TTL operations
   - Benchmark TTL set/get/cleanup operations
   - Test performance with large numbers of keys
   - _Requirements: Performance_
 
-- [ ]* 9.4 Write performance integration tests with go-redis
+- [x] 9.4 Write performance integration tests with go-redis
   - Benchmark TTL commands via Redis client under load
   - Test TTL system performance with concurrent Redis clients
   - Measure TTL operation latency via Redis protocol
   - Test cleanup performance with large datasets via Redis client
   - _Requirements: Performance, 4.1_
 
-- [ ] 10. Final checkpoint - Complete TTL system
+- [x] 10. Final checkpoint - Complete TTL system
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

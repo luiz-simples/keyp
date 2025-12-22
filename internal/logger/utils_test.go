@@ -86,10 +86,8 @@ func TestGetEnvWithDefault(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clean up environment
 			os.Unsetenv(tt.key)
 
-			// Set environment variable if needed
 			if tt.envValue != "" {
 				os.Setenv(tt.key, tt.envValue)
 				defer os.Unsetenv(tt.key)
@@ -122,11 +120,9 @@ func TestGetLogLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clean up environment
 			os.Unsetenv("KEYP_LOG_LEVEL")
 			os.Unsetenv("KEYP_TEST_MODE")
 
-			// Set environment variables
 			if tt.envValue != "" {
 				os.Setenv("KEYP_LOG_LEVEL", tt.envValue)
 				defer os.Unsetenv("KEYP_LOG_LEVEL")
@@ -157,10 +153,8 @@ func TestGetLogOutput(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clean up environment
 			os.Unsetenv("KEYP_TEST_MODE")
 
-			// Set environment variable
 			if tt.testMode != "" {
 				os.Setenv("KEYP_TEST_MODE", tt.testMode)
 				defer os.Unsetenv("KEYP_TEST_MODE")
@@ -168,9 +162,7 @@ func TestGetLogOutput(t *testing.T) {
 
 			result := getLogOutput()
 
-			// Check if it's io.Discard or os.Stdout
 			if tt.isDiscard {
-				// We can't directly compare io.Discard, but we can test by writing to it
 				n, err := result.Write([]byte("test"))
 				if err != nil || n != 4 {
 					t.Errorf("getLogOutput() in test mode should return io.Discard-like writer")

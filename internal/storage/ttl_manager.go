@@ -5,12 +5,13 @@ import (
 )
 
 const (
-	TTLNotFound    = -2
-	TTLPersistent  = -1
-	ExpireSuccess  = 1
-	ExpireFailure  = 0
-	PersistSuccess = 1
-	PersistFailure = 0
+	TTLNotFound         = -2
+	TTLPersistent       = -1
+	ExpireSuccess       = 1
+	ExpireFailure       = 0
+	PersistSuccess      = 1
+	PersistFailure      = 0
+	MaxCleanupBatchSize = 1000
 )
 
 type TTLManager interface {
@@ -27,12 +28,14 @@ type TTLManager interface {
 type LMDBTTLManager struct {
 	storage    *LMDBStorage
 	ttlStorage TTLStorage
+	metrics    *TTLMetrics
 }
 
 func NewLMDBTTLManager(storage *LMDBStorage) *LMDBTTLManager {
 	return &LMDBTTLManager{
 		storage:    storage,
 		ttlStorage: storage.GetTTLStorage(),
+		metrics:    NewTTLMetrics(),
 	}
 }
 
@@ -61,6 +64,7 @@ func (manager *LMDBTTLManager) SetExpire(key []byte, seconds int64) (int, error)
 		return ExpireFailure, err
 	}
 
+	manager.metrics.RecordTTLSet()
 	return ExpireSuccess, nil
 }
 
@@ -87,6 +91,7 @@ func (manager *LMDBTTLManager) SetExpireAt(key []byte, timestamp int64) (int, er
 		return ExpireFailure, err
 	}
 
+	manager.metrics.RecordTTLSet()
 	return ExpireSuccess, nil
 }
 
@@ -172,6 +177,7 @@ func (manager *LMDBTTLManager) Persist(key []byte) (int, error) {
 		return PersistFailure, err
 	}
 
+	manager.metrics.RecordTTLRemoved()
 	return PersistSuccess, nil
 }
 
@@ -193,30 +199,43 @@ func (manager *LMDBTTLManager) IsExpired(key []byte) (bool, error) {
 }
 
 func (manager *LMDBTTLManager) CleanupExpired() error {
+	startTime := manager.metrics.RecordCleanupStart()
+
 	now := time.Now().Unix()
 
 	expiredKeys, err := manager.ttlStorage.GetExpiredKeys(now)
 	if hasError(err) {
+		manager.metrics.RecordCleanupError()
 		return err
 	}
 
 	if isEmpty(expiredKeys) {
+		manager.metrics.RecordCleanupEnd(startTime, 0)
 		return nil
 	}
 
+	keysExpired := len(expiredKeys)
+
 	_, err = manager.storage.Del(expiredKeys...)
 	if hasError(err) {
+		manager.metrics.RecordCleanupError()
 		return err
 	}
 
 	err = manager.ttlStorage.RemoveTTLBatch(expiredKeys)
 	if hasError(err) {
+		manager.metrics.RecordCleanupError()
 		return err
 	}
 
+	manager.metrics.RecordCleanupEnd(startTime, keysExpired)
 	return nil
 }
 
 func (manager *LMDBTTLManager) RestoreTTL() error {
 	return manager.CleanupExpired()
+}
+
+func (manager *LMDBTTLManager) GetMetrics() *TTLMetrics {
+	return manager.metrics
 }

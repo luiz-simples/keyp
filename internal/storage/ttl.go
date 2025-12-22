@@ -144,7 +144,12 @@ func (ttlStorage *LMDBTTLStorage) GetExpiredKeys(before int64) ([][]byte, error)
 		}
 		defer cursor.Close()
 
+		count := 0
 		for {
+			if count >= MaxCleanupBatchSize {
+				break
+			}
+
 			key, value, cursorErr := cursor.Get(nil, nil, lmdb.Next)
 			if isNotFound(cursorErr) {
 				break
@@ -162,6 +167,7 @@ func (ttlStorage *LMDBTTLStorage) GetExpiredKeys(before int64) ([][]byte, error)
 				keyCopy := make([]byte, len(key))
 				copy(keyCopy, key)
 				expiredKeys = append(expiredKeys, keyCopy)
+				count++
 			}
 		}
 
