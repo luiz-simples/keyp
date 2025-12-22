@@ -13,7 +13,7 @@ func (server *Server) handleTTL(conn redcon.Conn, cmd redcon.Command) {
 	ttlManager := server.storage.GetTTLManager()
 	ttl, err := ttlManager.GetTTL(key)
 	if HasError(err) {
-		conn.WriteError("ERR " + err.Error())
+		conn.WriteError(err.Error())
 		return
 	}
 

@@ -126,8 +126,7 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 		ttlValue, ttlErr := txn.Get(storage.ttlStorage.GetTTLDBI(), key)
 
 		if !isNotFound(ttlErr) && !HasError(ttlErr) {
-			metadata, deserializeErr := deserializeTTLMetadata(ttlValue, key)
-			if !HasError(deserializeErr) && isKeyExpired(metadata.ExpiresAt) {
+			if isExpiredFromTTLData(ttlValue) {
 				return ErrKeyNotFound
 			}
 		}
@@ -142,9 +141,7 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 			return getErr
 		}
 
-		value = make([]byte, len(val))
-		copy(value, val)
-
+		value = val
 		return nil
 	})
 

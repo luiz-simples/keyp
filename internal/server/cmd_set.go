@@ -13,7 +13,7 @@ func (server *Server) handleSet(conn redcon.Conn, cmd redcon.Command) {
 
 	err := server.storage.Set(key, value)
 	if HasError(err) {
-		conn.WriteError("ERR " + err.Error())
+		conn.WriteError(err.Error())
 		return
 	}
 

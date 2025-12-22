@@ -12,7 +12,7 @@ func (server *Server) handleDel(conn redcon.Conn, cmd redcon.Command) {
 	deleted, err := server.storage.Del(keys...)
 
 	if HasError(err) {
-		conn.WriteError("ERR " + err.Error())
+		conn.WriteError(err.Error())
 		return
 	}
 

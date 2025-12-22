@@ -24,7 +24,7 @@ func (server *Server) handleExpireAt(conn redcon.Conn, cmd redcon.Command) {
 	ttlManager := server.storage.GetTTLManager()
 	result, err := ttlManager.SetExpireAt(key, timestamp)
 	if HasError(err) {
-		conn.WriteError("ERR " + err.Error())
+		conn.WriteError(err.Error())
 		return
 	}
 

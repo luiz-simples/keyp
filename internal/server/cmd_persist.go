@@ -13,7 +13,7 @@ func (server *Server) handlePersist(conn redcon.Conn, cmd redcon.Command) {
 	ttlManager := server.storage.GetTTLManager()
 	result, err := ttlManager.Persist(key)
 	if HasError(err) {
-		conn.WriteError("ERR " + err.Error())
+		conn.WriteError(err.Error())
 		return
 	}
 

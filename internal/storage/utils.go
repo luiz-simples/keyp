@@ -104,11 +104,21 @@ func isKeyExpired(expiresAt int64) bool {
 	return time.Now().Unix() >= expiresAt
 }
 
+var ttlSerializeBuffer = make([]byte, TimestampSize*2)
+
 func serializeTTLMetadata(metadata *TTLMetadata) []byte {
-	result := make([]byte, TimestampSize*2)
-	binary.BigEndian.PutUint64(result[0:TimestampSize], uint64(metadata.ExpiresAt))
-	binary.BigEndian.PutUint64(result[TimestampSize:TimestampSize*2], uint64(metadata.CreatedAt))
-	return result
+	binary.BigEndian.PutUint64(ttlSerializeBuffer[0:TimestampSize], uint64(metadata.ExpiresAt))
+	binary.BigEndian.PutUint64(ttlSerializeBuffer[TimestampSize:TimestampSize*2], uint64(metadata.CreatedAt))
+	return ttlSerializeBuffer
+}
+
+func isExpiredFromTTLData(data []byte) bool {
+	if isInvalidTTLData(data) {
+		return false
+	}
+
+	expiresAt := int64(binary.BigEndian.Uint64(data[0:TimestampSize]))
+	return time.Now().Unix() >= expiresAt
 }
 
 func deserializeTTLMetadata(data []byte, key []byte) (*TTLMetadata, error) {

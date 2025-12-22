@@ -17,7 +17,7 @@ func (server *Server) handleGet(conn redcon.Conn, cmd redcon.Command) {
 			return
 		}
 
-		conn.WriteError("ERR " + err.Error())
+		conn.WriteError(err.Error())
 		return
 	}
 

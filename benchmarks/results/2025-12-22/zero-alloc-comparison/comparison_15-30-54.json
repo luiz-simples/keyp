@@ -1,0 +1,113 @@
+{
+  "generated_at": "2025-12-22T15:30:54.856167-04:00",
+  "redis_config": {
+    "server_type": "keyp",
+    "address": "localhost:6380",
+    "num_operations": 1000,
+    "num_clients": 2,
+    "key_size": 16,
+    "value_size": 64,
+    "ttl_seconds": 300
+  },
+  "keyp_config": {
+    "server_type": "keyp",
+    "address": "localhost:6380",
+    "num_operations": 1000,
+    "num_clients": 2,
+    "key_size": 16,
+    "value_size": 64,
+    "ttl_seconds": 300
+  },
+  "commands": [
+    {
+      "command": "SET",
+      "redis_ops_per_sec": 11780.233754942794,
+      "keyp_ops_per_sec": 11418.849094199795,
+      "performance_ratio": 0.9693227937356195,
+      "redis_avg_latency": "168.6μs",
+      "keyp_avg_latency": "174.1μs",
+      "redis_p95_latency": "219.7μs",
+      "keyp_p95_latency": "250.0μs",
+      "redis_p99_latency": "343.8μs",
+      "keyp_p99_latency": "374.0μs",
+      "redis_success_rate": 100,
+      "keyp_success_rate": 100
+    },
+    {
+      "command": "GET",
+      "redis_ops_per_sec": 10554.456303068004,
+      "keyp_ops_per_sec": 11229.309954299291,
+      "performance_ratio": 1.0639401625107983,
+      "redis_avg_latency": "188.7μs",
+      "keyp_avg_latency": "177.3μs",
+      "redis_p95_latency": "259.5μs",
+      "keyp_p95_latency": "249.0μs",
+      "redis_p99_latency": "359.4μs",
+      "keyp_p99_latency": "300.5μs",
+      "redis_success_rate": 100,
+      "keyp_success_rate": 100
+    },
+    {
+      "command": "DEL",
+      "redis_ops_per_sec": 5921.0940324916955,
+      "keyp_ops_per_sec": 5719.196052610884,
+      "performance_ratio": 0.9659019129280997,
+      "redis_avg_latency": "336.9μs",
+      "keyp_avg_latency": "348.5μs",
+      "redis_p95_latency": "417.4μs",
+      "keyp_p95_latency": "472.2μs",
+      "redis_p99_latency": "559.7μs",
+      "keyp_p99_latency": "573.2μs",
+      "redis_success_rate": 100,
+      "keyp_success_rate": 100
+    },
+    {
+      "command": "EXPIRE",
+      "redis_ops_per_sec": 6182.776793256446,
+      "keyp_ops_per_sec": 6197.332358286376,
+      "performance_ratio": 1.002354211629604,
+      "redis_avg_latency": "322.6μs",
+      "keyp_avg_latency": "321.8μs",
+      "redis_p95_latency": "412.6μs",
+      "keyp_p95_latency": "421.2μs",
+      "redis_p99_latency": "524.6μs",
+      "keyp_p99_latency": "516.7μs",
+      "redis_success_rate": 100,
+      "keyp_success_rate": 100
+    },
+    {
+      "command": "TTL",
+      "redis_ops_per_sec": 3836.4121775103777,
+      "keyp_ops_per_sec": 5673.650220882296,
+      "performance_ratio": 1.4788948523680752,
+      "redis_avg_latency": "520.6μs",
+      "keyp_avg_latency": "351.6μs",
+      "redis_p95_latency": "646.6μs",
+      "keyp_p95_latency": "446.5μs",
+      "redis_p99_latency": "822.9μs",
+      "keyp_p99_latency": "590.3μs",
+      "redis_success_rate": 100,
+      "keyp_success_rate": 100
+    },
+    {
+      "command": "PERSIST",
+      "redis_ops_per_sec": 4108.7623581094385,
+      "keyp_ops_per_sec": 4032.900401475235,
+      "performance_ratio": 0.9815365431187629,
+      "redis_avg_latency": "486.0μs",
+      "keyp_avg_latency": "495.0μs",
+      "redis_p95_latency": "640.3μs",
+      "keyp_p95_latency": "638.5μs",
+      "redis_p99_latency": "782.1μs",
+      "keyp_p99_latency": "821.8μs",
+      "redis_success_rate": 100,
+      "keyp_success_rate": 100
+    }
+  ],
+  "summary": {
+    "overall_keyp_performance": "Equivalent",
+    "best_keyp_command": "TTL",
+    "worst_keyp_command": "DEL",
+    "avg_performance_ratio": 1.0769917460484932
+  }
+}
