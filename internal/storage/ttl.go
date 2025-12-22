@@ -204,3 +204,7 @@ func (ttlStorage *LMDBTTLStorage) RemoveTTLBatch(keys [][]byte) error {
 		return nil
 	})
 }
+
+func (ttlStorage *LMDBTTLStorage) GetTTLDBI() lmdb.DBI {
+	return ttlStorage.ttlDBI
+}

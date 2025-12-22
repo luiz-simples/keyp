@@ -120,19 +120,18 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	expired, err := storage.ttlManager.IsExpired(key)
-	if HasError(err) {
-		return nil, err
-	}
-
-	if expired {
-		storage.cleanupExpiredKey(key)
-		return nil, ErrKeyNotFound
-	}
-
 	var value []byte
 
 	err = storage.env.View(func(txn *lmdb.Txn) error {
+		ttlValue, ttlErr := txn.Get(storage.ttlStorage.GetTTLDBI(), key)
+
+		if !isNotFound(ttlErr) && !HasError(ttlErr) {
+			metadata, deserializeErr := deserializeTTLMetadata(ttlValue, key)
+			if !HasError(deserializeErr) && isKeyExpired(metadata.ExpiresAt) {
+				return ErrKeyNotFound
+			}
+		}
+
 		val, getErr := txn.Get(storage.dbi, key)
 
 		if isNotFound(getErr) {
@@ -150,6 +149,9 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 	})
 
 	if HasError(err) {
+		if err == ErrKeyNotFound {
+			storage.cleanupExpiredKey(key)
+		}
 		return nil, err
 	}
 
