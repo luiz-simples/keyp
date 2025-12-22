@@ -136,6 +136,127 @@ var _ = Describe("TTL Storage Property Tests", func() {
 		})
 	})
 
+	Describe("TTL Query Accuracy Properties", func() {
+		It("should satisfy TTL query accuracy property", func() {
+			parameters := gopter.DefaultTestParameters()
+			parameters.MinSuccessfulTests = 100
+
+			properties := gopter.NewProperties(parameters)
+
+			// **Feature: ttl-commands, Property 2: TTL Query Accuracy**
+			// **Validates: Requirements 2.1, 2.4**
+			properties.Property("TTL query accuracy", prop.ForAll(
+				func(key []byte, ttlSeconds int64) bool {
+					if len(key) == 0 || len(key) > storage.MaxKeySize {
+						return true
+					}
+
+					if ttlSeconds <= 0 || ttlSeconds > 3600 {
+						return true
+					}
+
+					testValue := []byte("test:value")
+
+					// Set the key in storage first
+					err := lmdbStorage.Set(key, testValue)
+					if err != nil {
+						return false
+					}
+
+					// Create TTL manager for testing
+					ttlManager := storage.NewLMDBTTLManager(lmdbStorage)
+
+					// Set TTL using SetExpire
+					result, err := ttlManager.SetExpire(key, ttlSeconds)
+					if err != nil || result != storage.ExpireSuccess {
+						return false
+					}
+
+					// Test GetTTL accuracy - should return value close to original
+					actualTTL, err := ttlManager.GetTTL(key)
+					if err != nil {
+						return false
+					}
+
+					// TTL should be positive and within reasonable bounds
+					if actualTTL <= 0 || actualTTL > ttlSeconds {
+						return false
+					}
+
+					// TTL should decrease over time - wait a small amount and check again
+					time.Sleep(1 * time.Millisecond)
+
+					secondTTL, err := ttlManager.GetTTL(key)
+					if err != nil {
+						return false
+					}
+
+					// Second reading should be <= first reading (time has passed)
+					if secondTTL > actualTTL {
+						return false
+					}
+
+					// Test GetPTTL accuracy - should return milliseconds
+					actualPTTL, err := ttlManager.GetPTTL(key)
+					if err != nil {
+						return false
+					}
+
+					// PTTL should be positive and roughly 1000x the TTL value
+					if actualPTTL <= 0 {
+						return false
+					}
+
+					// PTTL should be in reasonable range (allowing for execution time)
+					expectedPTTLMin := (ttlSeconds - 5) * 1000
+					expectedPTTLMax := ttlSeconds * 1000
+					if actualPTTL < expectedPTTLMin || actualPTTL > expectedPTTLMax {
+						return false
+					}
+
+					// Test persistent key behavior
+					ttlStorage := lmdbStorage.GetTTLStorage()
+					err = ttlStorage.RemoveTTL(key)
+					if err != nil {
+						return false
+					}
+
+					// Should return -1 for persistent keys
+					persistentTTL, err := ttlManager.GetTTL(key)
+					if err != nil || persistentTTL != storage.TTLPersistent {
+						return false
+					}
+
+					persistentPTTL, err := ttlManager.GetPTTL(key)
+					if err != nil || persistentPTTL != storage.TTLPersistent {
+						return false
+					}
+
+					// Clean up
+					lmdbStorage.Del(key)
+
+					// Test non-existent key behavior - should return -2
+					nonExistentTTL, err := ttlManager.GetTTL(key)
+					if err != nil || nonExistentTTL != storage.TTLNotFound {
+						return false
+					}
+
+					nonExistentPTTL, err := ttlManager.GetPTTL(key)
+					if err != nil || nonExistentPTTL != storage.TTLNotFound {
+						return false
+					}
+
+					return true
+				},
+				gen.SliceOfN(10, gen.UInt8()),
+				gen.Int64Range(5, 300), // Use smaller range for more predictable timing
+			))
+
+			result := properties.Run(gopter.ConsoleReporter(false))
+			Expect(result).To(BeTrue())
+		})
+	})
+
 	Describe("TTL Persistence Round-trip Properties", func() {
 		It("should satisfy TTL persistence round-trip property", func() {
 			parameters := gopter.DefaultTestParameters()

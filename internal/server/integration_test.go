@@ -268,6 +268,230 @@ var _ = Describe("Integration Tests", func() {
 			})
 		})
 
+		Describe("TTL/PTTL query commands via go-redis", func() {
+			It("should return TTL in seconds for keys with expiration", func() {
+				// Test TTL command via Redis client for keys with expiration
+				// _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+
+				testCases := []struct {
+					key   string
+					value string
+					ttl   int64
+				}{
+					{"ttl:query:key1", "value1", 10},
+					{"ttl:query:key2", "value2", 3600},
+					{"ttl:query:key3", "value3", 86400}, // 1 day
+				}
+
+				for _, tc := range testCases {
+					// Set key first
+					err := client.Set(ctx, tc.key, tc.value, 0).Err()
+					Expect(err).NotTo(HaveOccurred())
+
+					// Set TTL using EXPIRE command
+					result := client.Expire(ctx, tc.key, time.Duration(tc.ttl)*time.Second)
+					Expect(result.Err()).NotTo(HaveOccurred())
+					Expect(result.Val()).To(BeTrue())
+
+					// Query TTL using TTL command
+					ttlResult := client.TTL(ctx, tc.key)
+					Expect(ttlResult.Err()).NotTo(HaveOccurred())
+
+					// TTL should be close to the set value (within reasonable bounds)
+					actualTTL := int64(ttlResult.Val().Seconds())
+					Expect(actualTTL).To(BeNumerically(">", tc.ttl-10))
+					Expect(actualTTL).To(BeNumerically("<=", tc.ttl))
+
+					// Verify key still exists
+					val, err := client.Get(ctx, tc.key).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(val).To(Equal(tc.value))
+				}
+			})
+
+			It("should return PTTL in milliseconds with millisecond precision", func() {
+				// Test PTTL command via Redis client with millisecond precision
+				// _Requirements: 2.4, 2.5_
+
+				key := "pttl:precision:key"
+				value := "precision:value"
+				ttlSeconds := int64(30)
+
+				// Set key first
+				err := client.Set(ctx, key, value, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				// Set TTL using EXPIRE command
+				result := client.Expire(ctx, key, time.Duration(ttlSeconds)*time.Second)
+				Expect(result.Err()).NotTo(HaveOccurred())
+				Expect(result.Val()).To(BeTrue())
+
+				// Query PTTL using PTTL command
+				pttlResult := client.PTTL(ctx, key)
+				Expect(pttlResult.Err()).NotTo(HaveOccurred())
+
+				// PTTL should be in milliseconds (roughly 1000x the TTL)
+				actualPTTL := int64(pttlResult.Val().Milliseconds())
+				expectedPTTLMin := (ttlSeconds - 5) * 1000
+				expectedPTTLMax := ttlSeconds * 1000
+
+				Expect(actualPTTL).To(BeNumerically(">", expectedPTTLMin))
+				Expect(actualPTTL).To(BeNumerically("<=", expectedPTTLMax))
+
+				// Verify key still exists
+				val, err := client.Get(ctx, key).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal(value))
+			})
+
+			It("should return -1 for persistent keys (no TTL)", func() {
+				// Validate return codes: -1 for persistent
+				// _Requirements: 2.2, 2.5_
+
+				key := "persistent:ttl:key"
+				value := "persistent:value"
+
+				// Set key without TTL (persistent)
+				err := client.Set(ctx, key, value, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				// Query TTL - should return -1 for persistent key
+				ttlResult := client.Do(ctx, "TTL", key)
+				Expect(ttlResult.Err()).NotTo(HaveOccurred())
+				Expect(ttlResult.Val()).To(Equal(int64(-1)))
+
+				// Query PTTL - should return -1 for persistent key
+				pttlResult := client.Do(ctx, "PTTL", key)
+				Expect(pttlResult.Err()).NotTo(HaveOccurred())
+				Expect(pttlResult.Val()).To(Equal(int64(-1)))
+
+				// Verify key exists
+				val, err := client.Get(ctx, key).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal(value))
+			})
+
+			It("should return -2 for non-existent keys", func() {
+				// Validate return codes: -2 for non-existent
+				// _Requirements: 2.3, 2.5_
+
+				nonExistentKey := "non:existent:ttl:key"
+
+				// Query TTL for non-existent key - should return -2
+				ttlResult := client.Do(ctx, "TTL", nonExistentKey)
+				Expect(ttlResult.Err()).NotTo(HaveOccurred())
+				Expect(ttlResult.Val()).To(Equal(int64(-2)))
+
+				// Query PTTL for non-existent key - should return -2
+				pttlResult := client.Do(ctx, "PTTL", nonExistentKey)
+				Expect(pttlResult.Err()).NotTo(HaveOccurred())
+				Expect(pttlResult.Val()).To(Equal(int64(-2)))
+			})
+
+			It("should show TTL accuracy over time with multiple queries", func() {
+				// Test TTL accuracy over time with multiple queries
+				// _Requirements: 2.1, 2.4_
+
+				key := "time:accuracy:key"
+				value := "time:value"
+				initialTTL := int64(60) // 1 minute
+
+				// Set key with TTL
+				err := client.Set(ctx, key, value, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				result := client.Expire(ctx, key, time.Duration(initialTTL)*time.Second)
+				Expect(result.Err()).NotTo(HaveOccurred())
+				Expect(result.Val()).To(BeTrue())
+
+				// First TTL reading
+				firstTTL := client.TTL(ctx, key)
+				Expect(firstTTL.Err()).NotTo(HaveOccurred())
+				firstValue := int64(firstTTL.Val().Seconds())
+				Expect(firstValue).To(BeNumerically(">", 0))
+				Expect(firstValue).To(BeNumerically("<=", initialTTL))
+
+				// Wait a short time
+				time.Sleep(100 * time.Millisecond)
+
+				// Second TTL reading - should be less than or equal to first
+				secondTTL := client.TTL(ctx, key)
+				Expect(secondTTL.Err()).NotTo(HaveOccurred())
+				secondValue := int64(secondTTL.Val().Seconds())
+				Expect(secondValue).To(BeNumerically("<=", firstValue))
+
+				// Test PTTL precision during the same period
+				firstPTTL := client.PTTL(ctx, key)
+				Expect(firstPTTL.Err()).NotTo(HaveOccurred())
+				firstPTTLValue := int64(firstPTTL.Val().Milliseconds())
+				Expect(firstPTTLValue).To(BeNumerically(">", 0))
+
+				time.Sleep(50 * time.Millisecond)
+
+				secondPTTL := client.PTTL(ctx, key)
+				Expect(secondPTTL.Err()).NotTo(HaveOccurred())
+				secondPTTLValue := int64(secondPTTL.Val().Milliseconds())
+				Expect(secondPTTLValue).To(BeNumerically("<=", firstPTTLValue))
+			})
+
+			It("should validate Redis protocol compatibility for TTL/PTTL commands", func() {
+				// Test Redis protocol compatibility and response format
+				// _Requirements: 2.1, 2.4, 6.1_
+
+				key := "protocol:ttl:key"
+				value := "protocol:value"
+				ttl := int64(120)
+
+				// Set key with TTL
+				err := client.Set(ctx, key, value, 0).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				result := client.Expire(ctx, key, time.Duration(ttl)*time.Second)
+				Expect(result.Err()).NotTo(HaveOccurred())
+
+				// Test TTL command via raw Redis protocol
+				ttlResult := client.Do(ctx, "TTL", key)
+				Expect(ttlResult.Err()).NotTo(HaveOccurred())
+
+				ttlValue, ok := ttlResult.Val().(int64)
+				Expect(ok).To(BeTrue())
+				Expect(ttlValue).To(BeNumerically(">", 0))
+				Expect(ttlValue).To(BeNumerically("<=", ttl))
+
+				// Test PTTL command via raw Redis protocol
+				pttlResult := client.Do(ctx, "PTTL", key)
+				Expect(pttlResult.Err()).NotTo(HaveOccurred())
+
+				pttlValue, ok := pttlResult.Val().(int64)
+				Expect(ok).To(BeTrue())
+				Expect(pttlValue).To(BeNumerically(">", 0))
+				Expect(pttlValue).To(BeNumerically(">=", ttlValue*1000-1000)) // Allow some tolerance
+			})
+
+			It("should return proper error messages for invalid TTL/PTTL arguments", func() {
+				// Test command argument validation via Redis protocol
+				// _Requirements: 6.1_
+
+				// Test TTL with wrong number of arguments
+				result := client.Do(ctx, "TTL")
+				Expect(result.Err()).To(HaveOccurred())
+				Expect(result.Err().Error()).To(ContainSubstring("wrong number of arguments"))
+
+				result = client.Do(ctx, "TTL", "key1", "key2")
+				Expect(result.Err()).To(HaveOccurred())
+				Expect(result.Err().Error()).To(ContainSubstring("wrong number of arguments"))
+
+				// Test PTTL with wrong number of arguments
+				result = client.Do(ctx, "PTTL")
+				Expect(result.Err()).To(HaveOccurred())
+				Expect(result.Err().Error()).To(ContainSubstring("wrong number of arguments"))
+
+				result = client.Do(ctx, "PTTL", "key1", "key2")
+				Expect(result.Err()).To(HaveOccurred())
+				Expect(result.Err().Error()).To(ContainSubstring("wrong number of arguments"))
+			})
+		})
+
 		Describe("Redis protocol compatibility", func() {
 			It("should validate Redis protocol compatibility for TTL commands", func() {
 				// Test Redis protocol compatibility and response codes

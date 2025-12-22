@@ -39,16 +39,16 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - Test edge cases: negative TTL, non-existent keys, large TTL values
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-  - [ ] 2.4 Implement TTL query methods (GetTTL, GetPTTL)
+  - [x] 2.4 Implement TTL query methods (GetTTL, GetPTTL)
     - Add remaining time calculation logic
     - Handle persistent and non-existent key cases
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 2.5 Write property test for TTL query accuracy
+  - [x] 2.5 Write property test for TTL query accuracy
     - **Property 2: TTL Query Accuracy**
     - **Validates: Requirements 2.1, 2.4**
 
-  - [ ] 2.6 Write integration tests for TTL/PTTL with go-redis
+  - [x] 2.6 Write integration tests for TTL/PTTL with go-redis
     - Test TTL command via Redis client for keys with expiration
     - Test PTTL command via Redis client with millisecond precision
     - Validate return codes: -1 for persistent, -2 for non-existent
