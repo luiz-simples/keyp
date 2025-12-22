@@ -67,10 +67,15 @@ func (server *Server) handleCommand(conn redcon.Conn, cmd redcon.Command) {
 	command := strings.ToUpper(string(cmd.Args[0]))
 
 	handlers := map[string]func(redcon.Conn, redcon.Command){
-		"PING": handlePing,
-		"SET":  server.handleSet,
-		"GET":  server.handleGet,
-		"DEL":  server.handleDel,
+		"PING":     handlePing,
+		"SET":      server.handleSet,
+		"GET":      server.handleGet,
+		"DEL":      server.handleDel,
+		"EXPIRE":   server.handleExpire,
+		"EXPIREAT": server.handleExpireAt,
+		"TTL":      server.handleTTL,
+		"PTTL":     server.handlePTTL,
+		"PERSIST":  server.handlePersist,
 	}
 
 	handler, exists := handlers[command]

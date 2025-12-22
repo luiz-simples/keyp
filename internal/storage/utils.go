@@ -28,7 +28,10 @@ func exceedsLimit(key []byte) bool {
 }
 
 func isNotFound(err error) bool {
-	return lmdb.IsNotFound(err)
+	if lmdb.IsNotFound(err) {
+		return true
+	}
+	return err == ErrKeyNotFound
 }
 
 func validateTTLKey(key []byte) error {
@@ -70,6 +73,35 @@ func isExpiredBefore(expiresAt, before int64) bool {
 
 func isInvalidTTLData(data []byte) bool {
 	return len(data) != TimestampSize*2
+}
+
+func calculateExpiresAt(seconds int64) int64 {
+	return time.Now().Unix() + seconds
+}
+
+func calculateRemainingSeconds(expiresAt int64) int64 {
+	return expiresAt - time.Now().Unix()
+}
+
+func calculateRemainingMilliseconds(expiresAt int64) int64 {
+	remainingSeconds := expiresAt - time.Now().Unix()
+	return remainingSeconds * 1000
+}
+
+func isNegativeSeconds(seconds int64) bool {
+	return seconds < 0
+}
+
+func isPastTimestamp(timestamp int64) bool {
+	return timestamp <= time.Now().Unix()
+}
+
+func isExpiredTime(remaining int64) bool {
+	return remaining <= 0
+}
+
+func isKeyExpired(expiresAt int64) bool {
+	return time.Now().Unix() >= expiresAt
 }
 
 func serializeTTLMetadata(metadata *TTLMetadata) []byte {

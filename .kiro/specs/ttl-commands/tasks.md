@@ -23,16 +23,16 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
   - _Requirements: 5.1, 5.2_
 
 - [ ] 2. Implement TTL Manager core functionality
-  - [ ] 2.1 Create TTLManager struct and interface
+  - [x] 2.1 Create TTLManager struct and interface
     - Implement SetExpire and SetExpireAt methods
     - Add time utilities and validation functions
     - _Requirements: 1.1, 1.2_
 
-  - [ ]* 2.2 Write property test for TTL setting consistency
+  - [ ] 2.2 Write property test for TTL setting consistency
     - **Property 1: TTL Setting Consistency**
     - **Validates: Requirements 1.1, 1.2**
 
-  - [ ]* 2.3 Write integration tests for EXPIRE/EXPIREAT with go-redis
+  - [ ] 2.3 Write integration tests for EXPIRE/EXPIREAT with go-redis
     - Test EXPIRE command via Redis client with various TTL values
     - Test EXPIREAT command via Redis client with Unix timestamps
     - Validate Redis protocol compatibility and response codes
@@ -44,11 +44,11 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - Handle persistent and non-existent key cases
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ]* 2.5 Write property test for TTL query accuracy
+  - [ ] 2.5 Write property test for TTL query accuracy
     - **Property 2: TTL Query Accuracy**
     - **Validates: Requirements 2.1, 2.4**
 
-  - [ ]* 2.6 Write integration tests for TTL/PTTL with go-redis
+  - [ ] 2.6 Write integration tests for TTL/PTTL with go-redis
     - Test TTL command via Redis client for keys with expiration
     - Test PTTL command via Redis client with millisecond precision
     - Validate return codes: -1 for persistent, -2 for non-existent
@@ -60,11 +60,11 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - Return appropriate status codes
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ]* 2.8 Write property test for persist operation
+  - [ ] 2.8 Write property test for persist operation
     - **Property 3: Persist Operation Idempotency**
     - **Validates: Requirements 3.1**
 
-  - [ ]* 2.9 Write integration tests for PERSIST with go-redis
+  - [ ] 2.9 Write integration tests for PERSIST with go-redis
     - Test PERSIST command via Redis client on keys with TTL
     - Test PERSIST command on persistent and non-existent keys
     - Validate return codes and TTL removal behavior
@@ -126,7 +126,7 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - _Requirements: 4.2, 4.3, 5.1, 5.2, 5.3_
 
 - [ ] 6. Implement TTL command handlers
-  - [ ] 6.1 Create cmd_expire.go
+  - [x] 6.1 Create cmd_expire.go
     - Implement handleExpire with argument validation
     - Add seconds parsing and validation
     - _Requirements: 1.1, 6.1, 6.2, 6.3_

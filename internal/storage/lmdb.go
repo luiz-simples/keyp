@@ -27,6 +27,7 @@ type LMDBStorage struct {
 	env        *lmdb.Env
 	dbi        lmdb.DBI
 	ttlStorage *LMDBTTLStorage
+	ttlManager *LMDBTTLManager
 }
 
 func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
@@ -74,11 +75,16 @@ func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
 		return nil, err
 	}
 
-	return &LMDBStorage{
+	storage := &LMDBStorage{
 		env:        env,
 		dbi:        dbi,
 		ttlStorage: ttlStorage,
-	}, nil
+	}
+
+	ttlManager := NewLMDBTTLManager(storage)
+	storage.ttlManager = ttlManager
+
+	return storage, nil
 }
 
 func (storage *LMDBStorage) Close() error {
@@ -176,4 +182,8 @@ func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
 
 func (storage *LMDBStorage) GetTTLStorage() TTLStorage {
 	return storage.ttlStorage
+}
+
+func (storage *LMDBStorage) GetTTLManager() TTLManager {
+	return storage.ttlManager
 }
