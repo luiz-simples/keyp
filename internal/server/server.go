@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"log"
 	"strings"
 
@@ -18,7 +17,7 @@ type Server struct {
 
 func New(addr, dataDir string) (*Server, error) {
 	storage, err := storage.NewLMDBStorage(dataDir)
-	if err != nil {
+	if hasError(err) {
 		return nil, err
 	}
 
@@ -54,13 +53,13 @@ func (server *Server) handleConnect(conn redcon.Conn) bool {
 
 func (server *Server) handleClose(conn redcon.Conn, err error) {
 	log.Printf("Client disconnected: %s", conn.RemoteAddr())
-	if err != nil {
+	if hasError(err) {
 		log.Printf("Connection error: %v", err)
 	}
 }
 
 func (server *Server) handleCommand(conn redcon.Conn, cmd redcon.Command) {
-	if len(cmd.Args) == 0 {
+	if emptyArgs(cmd) {
 		conn.WriteError("ERR empty command")
 		return
 	}
@@ -81,71 +80,4 @@ func (server *Server) handleCommand(conn redcon.Conn, cmd redcon.Command) {
 	}
 
 	handler(conn, cmd)
-}
-
-func handlePing(conn redcon.Conn, cmd redcon.Command) {
-	if len(cmd.Args) == 1 {
-		conn.WriteString("PONG")
-		return
-	}
-	if len(cmd.Args) == 2 {
-		conn.WriteBulk(cmd.Args[1])
-		return
-	}
-	conn.WriteError("ERR wrong number of arguments for 'ping' command")
-}
-
-func (server *Server) handleSet(conn redcon.Conn, cmd redcon.Command) {
-	if len(cmd.Args) != 3 {
-		conn.WriteError("ERR wrong number of arguments for 'set' command")
-		return
-	}
-
-	key := cmd.Args[1]
-	value := cmd.Args[2]
-
-	err := server.storage.Set(key, value)
-	if err != nil {
-		conn.WriteError("ERR " + err.Error())
-		return
-	}
-
-	conn.WriteString("OK")
-}
-
-func (server *Server) handleGet(conn redcon.Conn, cmd redcon.Command) {
-	if len(cmd.Args) != 2 {
-		conn.WriteError("ERR wrong number of arguments for 'get' command")
-		return
-	}
-
-	key := cmd.Args[1]
-
-	value, err := server.storage.Get(key)
-	if err != nil {
-		if errors.Is(err, storage.ErrKeyNotFound) {
-			conn.WriteNull()
-			return
-		}
-		conn.WriteError("ERR " + err.Error())
-		return
-	}
-
-	conn.WriteBulk(value)
-}
-
-func (server *Server) handleDel(conn redcon.Conn, cmd redcon.Command) {
-	if len(cmd.Args) < 2 {
-		conn.WriteError("ERR wrong number of arguments for 'del' command")
-		return
-	}
-
-	keys := cmd.Args[1:]
-	deleted, err := server.storage.Del(keys...)
-	if err != nil {
-		conn.WriteError("ERR " + err.Error())
-		return
-	}
-
-	conn.WriteInt(deleted)
 }

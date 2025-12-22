@@ -13,7 +13,15 @@ var (
 	ErrKeyTooLarge = errors.New("key too large")
 )
 
-const MaxKeySize = 511
+const (
+	MaxKeySize         = 511
+	DirPermissions     = 0755
+	FilePermissions    = 0644
+	MaxDatabases       = 1
+	MapSizeBytes       = 1 << 30
+	NoFlags            = 0
+	InitialDeleteCount = 0
+)
 
 type LMDBStorage struct {
 	env *lmdb.Env
@@ -21,30 +29,30 @@ type LMDBStorage struct {
 }
 
 func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
-	err := os.MkdirAll(dataDir, 0755)
-	if err != nil {
+	err := os.MkdirAll(dataDir, DirPermissions)
+	if hasError(err) {
 		return nil, err
 	}
 
 	env, err := lmdb.NewEnv()
-	if err != nil {
+	if hasError(err) {
 		return nil, err
 	}
 
-	err = env.SetMaxDBs(1)
-	if err != nil {
+	err = env.SetMaxDBs(MaxDatabases)
+	if hasError(err) {
 		_ = env.Close()
 		return nil, err
 	}
 
-	err = env.SetMapSize(1 << 30)
-	if err != nil {
+	err = env.SetMapSize(MapSizeBytes)
+	if hasError(err) {
 		_ = env.Close()
 		return nil, err
 	}
 
-	err = env.Open(dataDir, 0, 0644)
-	if err != nil {
+	err = env.Open(dataDir, NoFlags, FilePermissions)
+	if hasError(err) {
 		_ = env.Close()
 		return nil, err
 	}
@@ -54,7 +62,7 @@ func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
 		dbi, err = txn.OpenDBI("keyp", lmdb.Create)
 		return err
 	})
-	if err != nil {
+	if hasError(err) {
 		_ = env.Close()
 		return nil, err
 	}
@@ -67,14 +75,6 @@ func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
 
 func (storage *LMDBStorage) Close() error {
 	return storage.env.Close()
-}
-
-func isEmpty(key []byte) bool {
-	return len(key) == 0
-}
-
-func exceedsLimit(key []byte) bool {
-	return len(key) > MaxKeySize
 }
 
 func (storage *LMDBStorage) validateKey(key []byte) error {
@@ -91,18 +91,18 @@ func (storage *LMDBStorage) validateKey(key []byte) error {
 
 func (storage *LMDBStorage) Set(key, value []byte) error {
 	err := storage.validateKey(key)
-	if err != nil {
+	if hasError(err) {
 		return err
 	}
 
 	return storage.env.Update(func(txn *lmdb.Txn) error {
-		return txn.Put(storage.dbi, key, value, 0)
+		return txn.Put(storage.dbi, key, value, NoFlags)
 	})
 }
 
 func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 	err := storage.validateKey(key)
-	if err != nil {
+	if hasError(err) {
 		return nil, err
 	}
 
@@ -111,11 +111,11 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 	err = storage.env.View(func(txn *lmdb.Txn) error {
 		val, getErr := txn.Get(storage.dbi, key)
 
-		if lmdb.IsNotFound(getErr) {
+		if isNotFound(getErr) {
 			return ErrKeyNotFound
 		}
 
-		if getErr != nil {
+		if hasError(getErr) {
 			return getErr
 		}
 
@@ -125,7 +125,7 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 		return nil
 	})
 
-	if err != nil {
+	if hasError(err) {
 		return nil, err
 	}
 
@@ -133,23 +133,23 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 }
 
 func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
-	deleted := 0
+	deleted := InitialDeleteCount
 
 	err := storage.env.Update(func(txn *lmdb.Txn) error {
 		for _, key := range keys {
 			err := storage.validateKey(key)
 
-			if err != nil {
+			if hasError(err) {
 				continue
 			}
 
 			err = txn.Del(storage.dbi, key, nil)
 
-			if lmdb.IsNotFound(err) {
+			if isNotFound(err) {
 				continue
 			}
 
-			if err != nil {
+			if hasError(err) {
 				return err
 			}
 
@@ -159,8 +159,8 @@ func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
 		return nil
 	})
 
-	if err != nil {
-		return 0, err
+	if hasError(err) {
+		return InitialDeleteCount, err
 	}
 
 	return deleted, nil

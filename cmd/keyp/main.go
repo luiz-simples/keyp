@@ -12,10 +12,16 @@ import (
 )
 
 const (
-	defaultPort    = "6380"
-	defaultHost    = "localhost"
-	defaultDataDir = "./data"
+	defaultPort      = "6380"
+	defaultHost      = "localhost"
+	defaultDataDir   = "./data"
+	signalBufferSize = 1
+	successExitCode  = 0
 )
+
+func hasError(err error) bool {
+	return err != nil
+}
 
 func main() {
 	var (
@@ -28,23 +34,23 @@ func main() {
 	addr := fmt.Sprintf("%s:%s", *host, *port)
 
 	srv, err := server.New(addr, *dataDir)
-	if err != nil {
+	if hasError(err) {
 		log.Fatalf("Failed to create server: %v", err)
 	}
 
-	// Graceful shutdown
-	c := make(chan os.Signal, 1)
+	c := make(chan os.Signal, signalBufferSize)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		<-c
 		log.Println("Shutting down server...")
 		_ = srv.Close()
-		os.Exit(0)
+		os.Exit(successExitCode)
 	}()
 
 	log.Printf("Keyp server starting on %s", addr)
-	if err := srv.ListenAndServe(); err != nil {
+
+	if err := srv.ListenAndServe(); hasError(err) {
 		log.Fatalf("Server error: %v", err)
 	}
 }

@@ -32,7 +32,7 @@ var _ = Describe("Integration Tests", func() {
 
 		go func() {
 			defer GinkgoRecover()
-			_ = srv.ListenAndServe()
+			srv.ListenAndServe()
 		}()
 
 		time.Sleep(100 * time.Millisecond)

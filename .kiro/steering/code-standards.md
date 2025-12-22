@@ -1,264 +1,181 @@
 # Padrões de Código - Projeto Keyp
 
-## Nomenclatura
+## 🚨 REGRA FUNDAMENTAL
+**SEMPRE CONFIRMAR ANTES DE EXECUTAR** - Perguntar ao usuário antes de qualquer ação (modificar código, executar comandos, criar arquivos)
 
-### Receivers - OBRIGATÓRIO: Nomes Descritivos
+## ⚡ REGRAS CRÍTICAS (Referência Rápida)
+
+### OBRIGATÓRIO
+- ✅ Receivers descritivos: `func (server *Server)` NUNCA `func (s *Server)`
+- ✅ Funções independentes em `utils.go` - métodos no arquivo principal
+- ✅ Return early - ZERO `if/else`
+- ✅ Maps dispatch - ZERO `switch`
+- ✅ Condições extraídas: `isEmpty(key)` NUNCA `len(key) == 0`
+- ✅ Erros extraídos: `hasError(err)` NUNCA `err != nil`
+- ✅ `any` NUNCA `interface{}`
+- ✅ ZERO comentários
+
+### PROIBIDO
+- ❌ `if/else` statements
+- ❌ `switch` statements  
+- ❌ Condições inline
+- ❌ Comparações de erro inline
+- ❌ Receivers de uma letra
+- ❌ Métodos que não usam estado
+- ❌ Comentários
+
+## 🔄 TRANSFORMAÇÕES OBRIGATÓRIAS
+
+### Receivers
 ```go
-// ✅ CORRETO - Nome descritivo
-func (server *Server) Start() error
-func (storage *LMDBStorage) Get(key []byte) ([]byte, error)
-func (config *Config) Validate() error
-
-// ❌ PROIBIDO - Abreviações de uma letra
-func (s *Server) Start() error
-func (c *Config) Validate() error
-func (l *LMDBStorage) Get() error
+❌ func (s *Server) Start() error
+✅ func (server *Server) Start() error
 ```
 
-### Variáveis e Funções
+### Condições
 ```go
-// ✅ Bom - Nomes curtos mas claros
-func parseCmd(data []byte) (*Command, error)
-func execSet(key, val []byte) error
-type ConnPool struct{}
+❌ if len(key) == 0 { return ErrEmpty }
+✅ if isEmpty(key) { return ErrEmpty }
 
-// ❌ Evitar
-func p(d []byte) (*Command, error)  // muito curto
-func executeSetCommand(key, value []byte) error  // muito verboso
-func c() error  // sem contexto
+❌ if err != nil { return err }
+✅ if hasError(err) { return err }
 ```
 
-### Packages e Arquivos
-- **Packages**: Nomes curtos, sem underscores ou camelCase
-- **Files**: snake_case, um conceito por arquivo
-- **Interfaces**: Terminação -er quando apropriado (Reader, Writer)
-- **Structs**: PascalCase para exportados, camelCase para privados
-
-## Estruturas de Controle
-
-### OBRIGATÓRIO: Return Early, NUNCA If/Else
+### Controle de Fluxo
 ```go
-// ✅ CORRETO - Return early
-func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
-    err := storage.performDelete(keys)
-    if err != nil {
-        return 0, err
-    }
-    
-    return len(keys), nil
-}
+❌ if condition { action() } else { other() }
+✅ if condition { action(); return }
+   other()
 
-// ❌ PROIBIDO - If/else
-func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
-    err := storage.performDelete(keys)
-    if err != nil {
-        return 0, err
-    } else {  // ← PROIBIDO
-        return len(keys), nil
-    }
-}
+❌ switch cmd { case "SET": handleSet() }
+✅ handlers[cmd](conn, cmd)
 ```
 
-### OBRIGATÓRIO: If Continue em Loops, NUNCA Else
+### Métodos vs Funções
 ```go
-// ✅ CORRETO - If continue em loop
-func (storage *LMDBStorage) processKeys(keys [][]byte) error {
-    for _, key := range keys {
-        isEmpty := len(key) == 0
-        if isEmpty {
-            continue  // ← CORRETO
-        }
-        
-        err := storage.processKey(key)
-        if err != nil {
-            return err
-        }
-    }
-    return nil
-}
+❌ func (s *Server) handlePing() // não usa s.*
+✅ func handlePing() // função independente
 
-// ❌ PROIBIDO - If/else em loop
-func (storage *LMDBStorage) processKeys(keys [][]byte) error {
-    for _, key := range keys {
-        if len(key) == 0 {
-            continue
-        } else {  // ← PROIBIDO
-            // código aqui
-        }
-    }
-    return nil
-}
+✅ func (server *Server) handleSet() // usa server.storage
 ```
 
-### OBRIGATÓRIO: Maps ao invés de Switch
-```go
-// ✅ CORRETO - Map dispatch
-type Server struct {
-    handlers map[string]func(redcon.Conn, redcon.Command)
-}
+## 📁 ORGANIZAÇÃO DE ARQUIVOS
 
-func (server *Server) setupHandlers() {
-    server.handlers = map[string]func(redcon.Conn, redcon.Command){
-        "PING": handlePing,
-        "ECHO": handleEcho,
-        "SET":  handleSet,
-    }
-}
-
-// ❌ PROIBIDO - Switch statement
-func (server *Server) handleCommand(conn redcon.Conn, cmd redcon.Command) {
-    switch string(cmd.Args[0]) {  // ← PROIBIDO
-    case "PING":
-        handlePing(conn, cmd)
-    case "ECHO":
-        handleEcho(conn, cmd)
-    }
-}
+### Estrutura Obrigatória
+```
+package/
+├── main.go          # Struct principal + métodos que usam estado
+├── utils.go         # Funções independentes (TODAS)
+└── *_test.go        # Testes
 ```
 
-## Métodos vs Funções
+### Regras de Separação
+- **`utils.go`**: TODAS as funções que NÃO acessam campos de struct
+- **Arquivo principal**: APENAS métodos que acessam/modificam estado
+- **Funções obrigatórias em utils.go**:
+  ```go
+  func hasError(err error) bool { return err != nil }
+  func noError(err error) bool { return err == nil }
+  func isEmpty(data []byte) bool { return len(data) == 0 }
+  ```
 
-### OBRIGATÓRIO: Métodos Apenas Quando Dependem do Estado
-```go
-// ✅ CORRETO - Depende do estado do struct
-func (server *Server) Start() error {
-    server.running = true  // Modifica estado
-    return server.listener.Listen()  // Usa estado
-}
+## 📝 COMMITS SEMÂNTICOS
 
-// ✅ CORRETO - Função independente
-func handlePing(conn redcon.Conn, cmd redcon.Command) {
-    conn.WriteString("PONG")  // Não usa estado de nenhum struct
-}
+### Tipos Obrigatórios
+- **feat**: Nova funcionalidade ou comando
+- **fix**: Correção de bug ou erro
+- **refactor**: Refatoração sem mudança de comportamento
+- **test**: Adição ou modificação de testes
+- **docs**: Documentação ou README
+- **style**: Formatação, lint, organização de código
 
-// ❌ PROIBIDO - Método que não usa estado
-func (server *Server) handlePing(conn redcon.Conn, cmd redcon.Command) {
-    conn.WriteString("PONG")  // Não usa server.*
-}
+### Formato Obrigatório
+```
+tipo: descrição em imperativo minúsculo
 ```
 
-**Regra:** Se a função NÃO acessa ou modifica campos do struct, DEVE ser função independente.
+### Regras de Escrita
+- ✅ Imperativo: "add", "fix", "refactor" (não "added", "fixed")
+- ✅ Minúsculo: "add set command" (não "Add SET Command")
+- ✅ Sem ponto final: "fix memory leak" (não "fix memory leak.")
+- ✅ Máximo 50 caracteres na linha de título
+- ✅ Descrição clara e específica
 
-## Variáveis Booleanas Explícitas
-
-### OBRIGATÓRIO: Condições extraídas para funcões nomenclaturas descrevendo a condição
-```go
-// ✅ CORRETO - Variável booleana explícita
-func isEmpty(key []byte) bool {
-    return len(key) == 0
-}
-func isExceedsLimit(key []byte) bool {
-    return len(key) > MaxKeySize
-}
-func validateKey(key []byte) error {
-    if isEmpty(key) {
-        return ErrEmptyKey
-    }
-
-    if isExceedsLimit(key) {
-        return ErrKeyTooLarge
-    }
-    
-    return nil
-}
-
-// ❌ PROIBIDO - Condição inline
-func validateKey(key []byte) error {
-    if len(key) == 0 {  // ← PROIBIDO - condição não explícita
-        return ErrEmptyKey
-    }
-    return nil
-}
+### Exemplos Práticos
+```bash
+feat: add SET command handler
+feat: implement DEL operation with multiple keys
+fix: resolve memory leak in LMDB storage
+fix: handle empty keys in validation
+refactor: extract magic numbers to constants
+refactor: separate commands into individual files
+test: add property tests for storage operations
+test: implement integration tests for server
+docs: update README with installation guide
+style: organize functions into utils.go files
 ```
 
-## Tipos e Interfaces
-
-### OBRIGATÓRIO: any ao invés de interface{}
-```go
-// ✅ CORRETO - Usar any (Go 1.18+)
-var pool = sync.Pool{
-    New: func() any {
-        return &Command{}
-    },
-}
-
-func process(value any) error {
-    return nil
-}
-
-// ❌ PROIBIDO - interface{} legado
-var pool = sync.Pool{
-    New: func() interface{} {  // ← PROIBIDO
-        return &Command{}
-    },
-}
+### Commits Compostos (Quando Necessário)
+```bash
+feat: add GET command with error handling
+refactor: extract validation functions to utils
+test: add unit tests for new command handlers
 ```
 
-## Comentários
+## 🔧 DEPENDÊNCIAS E CONFIGURAÇÃO
 
-### OBRIGATÓRIO: Zero Comentários
+### Bibliotecas Obrigatórias
 ```go
-// ✅ CORRETO - Código autoexplicativo
-func (storage *LMDBStorage) buildMetaKey(key []byte) []byte {
-    metaKey := make([]byte, len(key)+1)
-    metaKey[0] = 0xFF
-    copy(metaKey[1:], key)
-    return metaKey
-}
-
-// ❌ PROIBIDO - Qualquer comentário
-func (storage *LMDBStorage) buildMetaKey(key []byte) []byte {
-    // Create metadata key with prefix ← PROIBIDO
-    metaKey := make([]byte, len(key)+1)
-    metaKey[0] = 0xFF  // Add prefix ← PROIBIDO
-    copy(metaKey[1:], key)
-    return metaKey
-}
+"github.com/PowerDNS/lmdb-go/lmdb"  // Storage LMDB
+"github.com/tidwall/redcon"         // Servidor Redis
+"github.com/onsi/ginkgo/v2"         // Framework testes
+"github.com/onsi/gomega"            // Matchers testes
+"github.com/leanovate/gopter"       // Property-based tests
 ```
-
-**Regra:** ZERO comentários. Código deve ser autoexplicativo através de nomes.
-
-## Organização de Código
-
-### Estrutura de Arquivos
-- Um conceito principal por arquivo
-- Helpers em arquivos auxiliares quando não dependem de structs
-- Métodos privados no mesmo arquivo do struct quando dependem do estado
-- Sufixo _test.go para testes
-
-### Dependências do Projeto
-**Bibliotecas Obrigatórias:**
-- tidwall/redcon (servidor Redis)
-- bmatsenyuk/lmdb-go (storage)
-- onsi/ginkgo (testes)
-- onsi/gomega (matchers)
-- leanovate/gopter (property tests)
 
 ### Configuração
-- Environment variables com prefixo KEYP_
-- Arquivos de configuração em YAML ou TOML
-- Valores padrão sensatos
+- Environment variables: prefixo `KEYP_`
+- Arquivos: YAML ou TOML
 - Validação na inicialização
 
-## Checklist de Conformidade
+## ✅ CHECKLIST DE CONFORMIDADE
 
 Antes de qualquer commit:
-- [ ] Receivers usam nomes descritivos (não `s`, `c`, `l`)
-- [ ] Métodos apenas quando dependem do estado do struct
-- [ ] Funções independentes quando não usam estado
-- [ ] Zero `else` - apenas return early
-- [ ] Zero `switch` - apenas maps
-- [ ] Condições extraídas para funcões nomenclaturas descrevendo a condição
-- [ ] `any` ao invés de `interface{}`
-- [ ] Zero comentários
-- [ ] Nomes de variáveis curtos mas claros
+- [ ] **CONFIRMAÇÃO**: Perguntei ao usuário antes de executar
+- [ ] **RECEIVERS**: Nomes descritivos (não `s`, `c`, `l`)
+- [ ] **MÉTODOS**: Apenas quando dependem do estado
+- [ ] **FUNÇÕES**: Independentes em `utils.go`
+- [ ] **CONTROLE**: Zero `else` - apenas return early
+- [ ] **DISPATCH**: Zero `switch` - apenas maps
+- [ ] **CONDIÇÕES**: Extraídas para funções nomeadas
+- [ ] **ERROS**: Usando `hasError()` e `noError()`
+- [ ] **TIPOS**: `any` ao invés de `interface{}`
+- [ ] **COMENTÁRIOS**: Zero comentários
+- [ ] **DEPENDÊNCIAS**: Bibliotecas corretas
+- [ ] **COMMITS**: Formato semântico obrigatório
 
-## Violações comuns a evitar
+## 🚫 VIOLAÇÕES CRÍTICAS
 
-1. **Receiver de uma letra:** `func (s *Server)` → `func (server *Server)`
-2. **Método sem estado:** `func (s *Server) handlePing()` → `func handlePing()`
-3. **If/else em função:** `if err != nil {...} else {...}` → `if err != nil {...} return ...`
-4. **If/else em loop:** `if condition {...} else {...}` → `if condition { continue } ...`
-5. **Switch:** `switch cmd {...}` → `handlers[cmd](...)`
-6. **Interface{} legado:** `func(value interface{})` → `func(value any)`
-7. **Condição inline:** `if len(key) == 0` → `func isEmpty(key []byte) { return len(key) == 0 } if isEmpty(key)`
+| Violação | Transformação |
+|----------|---------------|
+| `func (s *Server)` | `func (server *Server)` |
+| `func (s *Server) ping()` sem usar `s.*` | `func ping()` em utils.go |
+| `if err != nil` | `if hasError(err)` |
+| `if len(x) == 0` | `if isEmpty(x)` |
+| `if/else` | return early |
+| `switch` | map dispatch |
+| `interface{}` | `any` |
+| Função independente fora utils.go | Mover para utils.go |
+| Qualquer comentário | Remover, usar nomes descritivos |
+| Commit não semântico | `tipo: descrição imperativo minúsculo` |
+
+## 🔄 PROCESSO DE TRABALHO
+
+1. **SEMPRE** perguntar antes de executar
+2. Identificar violações dos padrões
+3. Propor correções específicas
+4. Aguardar confirmação do usuário
+5. Executar apenas após confirmação
+6. Verificar conformidade com checklist
+7. Executar testes para validar
+8. **Commit semântico**: Usar formato `tipo: descrição`
