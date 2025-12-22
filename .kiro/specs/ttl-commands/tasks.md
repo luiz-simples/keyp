@@ -98,27 +98,27 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - Add batch cleanup for expired keys
     - _Requirements: 4.1, 4.4_
 
-- [ ] 4. Checkpoint - Core TTL functionality complete
+- [x] 4. Checkpoint - Core TTL functionality complete
   - Ensure all TTL manager tests pass, ask the user if questions arise.
 
-- [ ] 5. Integrate TTL system with existing storage
-  - [ ] 5.1 Enhance LMDBStorage with TTL support
+- [x] 5. Integrate TTL system with existing storage
+  - [x] 5.1 Enhance LMDBStorage with TTL support
     - Add TTL metadata database to LMDB setup
     - Implement TTL-aware Get/Set/Del operations
     - _Requirements: 5.1, 5.2_
 
-  - [ ] 5.2 Update existing commands to handle TTL
+  - [x] 5.2 Update existing commands to handle TTL
     - Modify GET command to check expiration
     - Update SET command to preserve existing TTL
     - Update DEL command to clean TTL metadata
     - _Requirements: 4.2, 4.3_
 
-  - [ ]* 5.3 Write integration tests for TTL storage
+  - [x] 5.3 Write integration tests for TTL storage
     - Test TTL persistence across restarts
     - Test cleanup during startup
     - _Requirements: 5.3_
 
-  - [ ]* 5.4 Write comprehensive integration tests with go-redis
+  - [x] 5.4 Write comprehensive integration tests with go-redis
     - Test TTL integration with existing SET/GET/DEL commands
     - Test TTL behavior with Redis client during server restart
     - Test concurrent TTL operations from multiple Redis clients

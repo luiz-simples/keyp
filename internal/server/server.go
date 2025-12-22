@@ -26,6 +26,12 @@ func New(addr, dataDir string) (*Server, error) {
 		return nil, err
 	}
 
+	ttlManager := storage.GetTTLManager()
+	err = ttlManager.RestoreTTL()
+	if hasError(err) {
+		logger.Error("TTL restoration failed", "error", err)
+	}
+
 	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
 
 	server := &Server{
