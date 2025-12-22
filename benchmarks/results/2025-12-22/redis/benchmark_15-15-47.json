@@ -1,0 +1,99 @@
+{
+  "config": {
+    "server_type": "redis",
+    "address": "localhost:6379",
+    "num_operations": 1000,
+    "num_clients": 2,
+    "key_size": 16,
+    "value_size": 64,
+    "ttl_seconds": 300
+  },
+  "commands": [
+    {
+      "command": "SET",
+      "total_ops": 1000,
+      "duration": 47096083,
+      "ops_per_second": 21233.18833118245,
+      "avg_latency": 92841,
+      "p95_latency": 176000,
+      "p99_latency": 355917,
+      "min_latency": 20250,
+      "max_latency": 1542792,
+      "error_count": 0,
+      "success_rate": 100
+    },
+    {
+      "command": "GET",
+      "total_ops": 1000,
+      "duration": 48977125,
+      "ops_per_second": 20417.694995367736,
+      "avg_latency": 97030,
+      "p95_latency": 153042,
+      "p99_latency": 236500,
+      "min_latency": 40709,
+      "max_latency": 1011917,
+      "error_count": 0,
+      "success_rate": 100
+    },
+    {
+      "command": "DEL",
+      "total_ops": 1000,
+      "duration": 48721500,
+      "ops_per_second": 20524.81963814743,
+      "avg_latency": 96096,
+      "p95_latency": 148792,
+      "p99_latency": 205125,
+      "min_latency": 39875,
+      "max_latency": 2171750,
+      "error_count": 0,
+      "success_rate": 100
+    },
+    {
+      "command": "EXPIRE",
+      "total_ops": 1000,
+      "duration": 48869875,
+      "ops_per_second": 20462.503740801465,
+      "avg_latency": 96529,
+      "p95_latency": 148125,
+      "p99_latency": 190834,
+      "min_latency": 46000,
+      "max_latency": 288917,
+      "error_count": 0,
+      "success_rate": 100
+    },
+    {
+      "command": "TTL",
+      "total_ops": 1000,
+      "duration": 72512333,
+      "ops_per_second": 13790.757497762484,
+      "avg_latency": 143971,
+      "p95_latency": 219959,
+      "p99_latency": 311334,
+      "min_latency": 65709,
+      "max_latency": 443083,
+      "error_count": 0,
+      "success_rate": 100
+    },
+    {
+      "command": "PERSIST",
+      "total_ops": 1000,
+      "duration": 74478458,
+      "ops_per_second": 13426.701181165701,
+      "avg_latency": 147783,
+      "p95_latency": 220167,
+      "p99_latency": 277250,
+      "min_latency": 72167,
+      "max_latency": 417500,
+      "error_count": 0,
+      "success_rate": 100
+    }
+  ],
+  "system_metrics": {
+    "memory_usage_mb": 1.5665206909179688,
+    "cpu_usage": 0,
+    "timestamp": "2025-12-22T15:15:48.177421-04:00"
+  },
+  "start_time": "2025-12-22T15:15:47.832201-04:00",
+  "end_time": "2025-12-22T15:15:48.177365-04:00",
+  "total_duration": 345163125
+}

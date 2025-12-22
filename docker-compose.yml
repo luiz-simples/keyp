@@ -10,8 +10,24 @@ services:
     networks:
       - keyp-network
 
+  keyp:
+    build:
+      context: .
+      dockerfile: benchmarks/docker/Dockerfile.keyp
+    container_name: keyp-server-test
+    ports:
+      - "6380:6380"
+    environment:
+      - KEYP_LOG_LEVEL=ERROR
+      - KEYP_TEST_MODE=false
+    volumes:
+      - keyp_data:/root/data
+    networks:
+      - keyp-network
+
 volumes:
   redis_data:
+  keyp_data:
 
 networks:
   keyp-network:
