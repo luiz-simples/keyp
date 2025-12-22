@@ -24,8 +24,9 @@ const (
 )
 
 type LMDBStorage struct {
-	env *lmdb.Env
-	dbi lmdb.DBI
+	env        *lmdb.Env
+	dbi        lmdb.DBI
+	ttlStorage *LMDBTTLStorage
 }
 
 func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
@@ -39,21 +40,21 @@ func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
 		return nil, err
 	}
 
-	err = env.SetMaxDBs(MaxDatabases)
+	err = env.SetMaxDBs(MaxDatabases + 1)
 	if hasError(err) {
-		_ = env.Close()
+		env.Close()
 		return nil, err
 	}
 
 	err = env.SetMapSize(MapSizeBytes)
 	if hasError(err) {
-		_ = env.Close()
+		env.Close()
 		return nil, err
 	}
 
 	err = env.Open(dataDir, NoFlags, FilePermissions)
 	if hasError(err) {
-		_ = env.Close()
+		env.Close()
 		return nil, err
 	}
 
@@ -63,13 +64,20 @@ func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
 		return err
 	})
 	if hasError(err) {
-		_ = env.Close()
+		env.Close()
+		return nil, err
+	}
+
+	ttlStorage, err := NewLMDBTTLStorage(env)
+	if hasError(err) {
+		env.Close()
 		return nil, err
 	}
 
 	return &LMDBStorage{
-		env: env,
-		dbi: dbi,
+		env:        env,
+		dbi:        dbi,
+		ttlStorage: ttlStorage,
 	}, nil
 }
 
@@ -164,4 +172,8 @@ func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
 	}
 
 	return deleted, nil
+}
+
+func (storage *LMDBStorage) GetTTLStorage() TTLStorage {
+	return storage.ttlStorage
 }
