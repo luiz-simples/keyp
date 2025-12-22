@@ -163,34 +163,34 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - Test TTL commands with various data types and edge cases
     - _Requirements: 1.1, 1.2, 2.1, 2.4, 3.1, 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 7. Add TTL command constants and utilities
-  - [ ] 7.1 Update server/utils.go with TTL validation functions
+- [x] 7. Add TTL command constants and utilities
+  - [x] 7.1 Update server/utils.go with TTL validation functions
     - Add TTL argument count validation functions
     - Add time parsing and validation utilities
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-  - [ ] 7.2 Update server command dispatcher
+  - [x] 7.2 Update server command dispatcher
     - Add TTL commands to handler map
     - Ensure proper command routing
     - _Requirements: All TTL commands_
 
-- [ ] 8. Implement TTL persistence and recovery
-  - [ ] 8.1 Add TTL restoration on server startup
+- [x] 8. Implement TTL persistence and recovery
+  - [x] 8.1 Add TTL restoration on server startup
     - Implement RestoreTTL method
     - Add startup cleanup for expired keys
     - _Requirements: 5.2, 5.3_
 
-  - [ ] 8.2 Add graceful shutdown for TTL system
+  - [x] 8.2 Add graceful shutdown for TTL system
     - Ensure TTL metadata is properly persisted
     - Stop background cleanup processes cleanly
     - _Requirements: 5.1_
 
-- [ ]* 8.3 Write property test for TTL persistence
+- [x] 8.3 Write property test for TTL persistence
   - Test TTL survival across server restarts
   - Test startup cleanup behavior
   - _Requirements: 5.2, 5.3_
 
-- [ ]* 8.4 Write integration tests for TTL persistence with go-redis
+- [x] 8.4 Write integration tests for TTL persistence with go-redis
   - Test TTL commands work correctly after server restart via Redis client
   - Test expired key cleanup during startup via Redis protocol
   - Test TTL restoration accuracy after restart via Redis client
