@@ -44,7 +44,7 @@ func main() {
 	go func() {
 		<-c
 		log.Println("Shutting down server...")
-		_ = srv.Close()
+		srv.Close()
 		os.Exit(successExitCode)
 	}()
 

@@ -41,7 +41,7 @@ func (server *Server) ListenAndServe() error {
 
 func (server *Server) Close() error {
 	if server.storage != nil {
-		_ = server.storage.Close()
+		server.storage.Close()
 	}
 	return server.server.Close()
 }

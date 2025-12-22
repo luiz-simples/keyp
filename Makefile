@@ -1,7 +1,8 @@
-.PHONY: build test test-unit test-integration test-property benchmark clean run run-dev deps lint format all docker-build docker-run
+.PHONY: build test test-unit test-integration test-property test-coverage benchmark clean run run-dev deps lint format all docker-build docker-run
 
 build:
-	CGO_ENABLED=1 go build \
+	CGO_ENABLED=1 \
+		go build \
 		-trimpath \
 		-ldflags="-s -w" \
 		-o ./bin/keyp \
