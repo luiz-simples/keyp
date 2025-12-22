@@ -17,9 +17,9 @@ func TestHasError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := hasError(tt.err)
+			result := HasError(tt.err)
 			if result != tt.expected {
-				t.Errorf("hasError(%v) = %v, want %v", tt.err, result, tt.expected)
+				t.Errorf("HasError(%v) = %v, want %v", tt.err, result, tt.expected)
 			}
 		})
 	}
@@ -38,9 +38,9 @@ func TestIsEmpty(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := isEmpty(tt.data)
+			result := IsEmpty(tt.data)
 			if result != tt.expected {
-				t.Errorf("isEmpty(%q) = %v, want %v", tt.data, result, tt.expected)
+				t.Errorf("IsEmpty(%q) = %v, want %v", tt.data, result, tt.expected)
 			}
 		})
 	}
@@ -164,10 +164,11 @@ func TestGetLogOutput(t *testing.T) {
 
 			if tt.isDiscard {
 				n, err := result.Write([]byte("test"))
-				if err != nil || n != 4 {
+				if HasError(err) || n != 4 {
 					t.Errorf("getLogOutput() in test mode should return io.Discard-like writer")
 				}
-			} else {
+			}
+			if !tt.isDiscard {
 				if result != os.Stdout {
 					t.Errorf("getLogOutput() in production mode should return os.Stdout")
 				}

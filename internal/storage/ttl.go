@@ -47,7 +47,7 @@ func NewLMDBTTLStorage(env *lmdb.Env) (*LMDBTTLStorage, error) {
 		return openErr
 	})
 
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
@@ -59,12 +59,12 @@ func NewLMDBTTLStorage(env *lmdb.Env) (*LMDBTTLStorage, error) {
 
 func (ttlStorage *LMDBTTLStorage) SetTTL(key []byte, expiresAt int64) error {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return err
 	}
 
 	err = validateTimestamp(expiresAt)
-	if hasError(err) {
+	if HasError(err) {
 		return err
 	}
 
@@ -83,7 +83,7 @@ func (ttlStorage *LMDBTTLStorage) SetTTL(key []byte, expiresAt int64) error {
 
 func (ttlStorage *LMDBTTLStorage) GetTTL(key []byte) (*TTLMetadata, error) {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
@@ -96,7 +96,7 @@ func (ttlStorage *LMDBTTLStorage) GetTTL(key []byte) (*TTLMetadata, error) {
 			return ErrTTLNotFound
 		}
 
-		if hasError(getErr) {
+		if HasError(getErr) {
 			return getErr
 		}
 
@@ -105,7 +105,7 @@ func (ttlStorage *LMDBTTLStorage) GetTTL(key []byte) (*TTLMetadata, error) {
 		return deserializeErr
 	})
 
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
@@ -114,7 +114,7 @@ func (ttlStorage *LMDBTTLStorage) GetTTL(key []byte) (*TTLMetadata, error) {
 
 func (ttlStorage *LMDBTTLStorage) RemoveTTL(key []byte) error {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return err
 	}
 
@@ -131,7 +131,7 @@ func (ttlStorage *LMDBTTLStorage) RemoveTTL(key []byte) error {
 
 func (ttlStorage *LMDBTTLStorage) GetExpiredKeys(before int64) ([][]byte, error) {
 	err := validateTimestamp(before)
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
@@ -139,7 +139,7 @@ func (ttlStorage *LMDBTTLStorage) GetExpiredKeys(before int64) ([][]byte, error)
 
 	err = ttlStorage.env.View(func(txn *lmdb.Txn) error {
 		cursor, cursorErr := txn.OpenCursor(ttlStorage.ttlDBI)
-		if hasError(cursorErr) {
+		if HasError(cursorErr) {
 			return cursorErr
 		}
 		defer cursor.Close()
@@ -154,12 +154,12 @@ func (ttlStorage *LMDBTTLStorage) GetExpiredKeys(before int64) ([][]byte, error)
 			if isNotFound(cursorErr) {
 				break
 			}
-			if hasError(cursorErr) {
+			if HasError(cursorErr) {
 				return cursorErr
 			}
 
 			metadata, deserializeErr := deserializeTTLMetadata(value, key)
-			if hasError(deserializeErr) {
+			if HasError(deserializeErr) {
 				continue
 			}
 
@@ -174,7 +174,7 @@ func (ttlStorage *LMDBTTLStorage) GetExpiredKeys(before int64) ([][]byte, error)
 		return nil
 	})
 
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
@@ -182,14 +182,14 @@ func (ttlStorage *LMDBTTLStorage) GetExpiredKeys(before int64) ([][]byte, error)
 }
 
 func (ttlStorage *LMDBTTLStorage) RemoveTTLBatch(keys [][]byte) error {
-	if isEmpty(keys) {
+	if IsEmpty(keys) {
 		return nil
 	}
 
 	return ttlStorage.env.Update(func(txn *lmdb.Txn) error {
 		for _, key := range keys {
 			err := validateTTLKey(key)
-			if hasError(err) {
+			if HasError(err) {
 				continue
 			}
 
@@ -197,7 +197,7 @@ func (ttlStorage *LMDBTTLStorage) RemoveTTLBatch(keys [][]byte) error {
 			if isNotFound(delErr) {
 				continue
 			}
-			if hasError(delErr) {
+			if HasError(delErr) {
 				return delErr
 			}
 		}

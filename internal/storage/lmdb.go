@@ -32,29 +32,29 @@ type LMDBStorage struct {
 
 func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
 	err := os.MkdirAll(dataDir, DirPermissions)
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
 	env, err := lmdb.NewEnv()
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
 	err = env.SetMaxDBs(MaxDatabases + 1)
-	if hasError(err) {
+	if HasError(err) {
 		env.Close()
 		return nil, err
 	}
 
 	err = env.SetMapSize(MapSizeBytes)
-	if hasError(err) {
+	if HasError(err) {
 		env.Close()
 		return nil, err
 	}
 
 	err = env.Open(dataDir, NoFlags, FilePermissions)
-	if hasError(err) {
+	if HasError(err) {
 		env.Close()
 		return nil, err
 	}
@@ -64,13 +64,13 @@ func NewLMDBStorage(dataDir string) (*LMDBStorage, error) {
 		dbi, err = txn.OpenDBI("keyp", lmdb.Create)
 		return err
 	})
-	if hasError(err) {
+	if HasError(err) {
 		env.Close()
 		return nil, err
 	}
 
 	ttlStorage, err := NewLMDBTTLStorage(env)
-	if hasError(err) {
+	if HasError(err) {
 		env.Close()
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (storage *LMDBStorage) Close() error {
 }
 
 func (storage *LMDBStorage) validateKey(key []byte) error {
-	if isEmpty(key) {
+	if IsEmpty(key) {
 		return ErrEmptyKey
 	}
 
@@ -105,7 +105,7 @@ func (storage *LMDBStorage) validateKey(key []byte) error {
 
 func (storage *LMDBStorage) Set(key, value []byte) error {
 	err := storage.validateKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return err
 	}
 
@@ -116,12 +116,12 @@ func (storage *LMDBStorage) Set(key, value []byte) error {
 
 func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 	err := storage.validateKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
 	expired, err := storage.ttlManager.IsExpired(key)
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
@@ -139,7 +139,7 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 			return ErrKeyNotFound
 		}
 
-		if hasError(getErr) {
+		if HasError(getErr) {
 			return getErr
 		}
 
@@ -149,7 +149,7 @@ func (storage *LMDBStorage) Get(key []byte) ([]byte, error) {
 		return nil
 	})
 
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
@@ -163,7 +163,7 @@ func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
 		for _, key := range keys {
 			err := storage.validateKey(key)
 
-			if hasError(err) {
+			if HasError(err) {
 				continue
 			}
 
@@ -173,7 +173,7 @@ func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
 				continue
 			}
 
-			if hasError(err) {
+			if HasError(err) {
 				return err
 			}
 
@@ -183,7 +183,7 @@ func (storage *LMDBStorage) Del(keys ...[]byte) (int, error) {
 		return nil
 	})
 
-	if hasError(err) {
+	if HasError(err) {
 		return InitialDeleteCount, err
 	}
 
@@ -204,14 +204,14 @@ func (storage *LMDBStorage) GetTTLManager() TTLManager {
 
 func (storage *LMDBStorage) cleanupExpiredKey(key []byte) {
 	_, err := storage.Del(key)
-	if hasError(err) {
+	if HasError(err) {
 		return
 	}
 }
 
 func (storage *LMDBStorage) cleanupTTLMetadata(key []byte) {
 	err := storage.ttlStorage.RemoveTTL(key)
-	if hasError(err) {
+	if HasError(err) {
 		return
 	}
 }

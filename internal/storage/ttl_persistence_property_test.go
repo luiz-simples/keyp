@@ -44,7 +44,7 @@ var _ = Describe("TTL Persistence Property Tests", func() {
 
 			properties.Property("TTL operations are consistent", prop.ForAll(
 				func(keyData []byte, seconds int64) bool {
-					if isEmpty(keyData) || exceedsLimit(keyData) {
+					if IsEmpty(keyData) || exceedsLimit(keyData) {
 						return true
 					}
 
@@ -57,23 +57,23 @@ var _ = Describe("TTL Persistence Property Tests", func() {
 					value := []byte("test-value")
 
 					err := storage.Set(key, value)
-					if hasError(err) {
+					if HasError(err) {
 						return false
 					}
 
 					ttlManager := storage.GetTTLManager()
 					result, err := ttlManager.SetExpire(key, seconds)
-					if hasError(err) || result != ExpireSuccess {
+					if HasError(err) || result != ExpireSuccess {
 						return false
 					}
 
 					ttl, err := ttlManager.GetTTL(key)
-					if hasError(err) || ttl <= 0 {
+					if HasError(err) || ttl <= 0 {
 						return false
 					}
 
 					pttl, err := ttlManager.GetPTTL(key)
-					if hasError(err) || pttl <= 0 {
+					if HasError(err) || pttl <= 0 {
 						return false
 					}
 
@@ -98,7 +98,7 @@ var _ = Describe("TTL Persistence Property Tests", func() {
 
 			properties.Property("expired keys behave correctly", prop.ForAll(
 				func(keyData []byte) bool {
-					if isEmpty(keyData) || exceedsLimit(keyData) {
+					if IsEmpty(keyData) || exceedsLimit(keyData) {
 						return true
 					}
 
@@ -107,20 +107,20 @@ var _ = Describe("TTL Persistence Property Tests", func() {
 					value := []byte("test-value")
 
 					err := storage.Set(key, value)
-					if hasError(err) {
+					if HasError(err) {
 						return false
 					}
 
 					ttlManager := storage.GetTTLManager()
 					result, err := ttlManager.SetExpire(key, 1)
-					if hasError(err) || result != ExpireSuccess {
+					if HasError(err) || result != ExpireSuccess {
 						return false
 					}
 
 					time.Sleep(1100 * time.Millisecond)
 
 					expired, err := ttlManager.IsExpired(key)
-					if hasError(err) {
+					if HasError(err) {
 						return false
 					}
 
@@ -144,7 +144,7 @@ var _ = Describe("TTL Persistence Property Tests", func() {
 
 			properties.Property("persist operations work correctly", prop.ForAll(
 				func(keyData []byte, seconds int64) bool {
-					if isEmpty(keyData) || exceedsLimit(keyData) {
+					if IsEmpty(keyData) || exceedsLimit(keyData) {
 						return true
 					}
 
@@ -157,23 +157,23 @@ var _ = Describe("TTL Persistence Property Tests", func() {
 					value := []byte("test-value")
 
 					err := storage.Set(key, value)
-					if hasError(err) {
+					if HasError(err) {
 						return false
 					}
 
 					ttlManager := storage.GetTTLManager()
 					result, err := ttlManager.SetExpire(key, seconds)
-					if hasError(err) || result != ExpireSuccess {
+					if HasError(err) || result != ExpireSuccess {
 						return false
 					}
 
 					persistResult, err := ttlManager.Persist(key)
-					if hasError(err) || persistResult != PersistSuccess {
+					if HasError(err) || persistResult != PersistSuccess {
 						return false
 					}
 
 					ttl, err := ttlManager.GetTTL(key)
-					if hasError(err) {
+					if HasError(err) {
 						return false
 					}
 

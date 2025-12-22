@@ -10,13 +10,13 @@ import (
 
 func BenchmarkTTLOperations(b *testing.B) {
 	tempDir, err := os.MkdirTemp("", "keyp_benchmark_ttl_*")
-	if err != nil {
+	if HasError(err) {
 		b.Fatalf("Failed to create temp dir: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 
 	storage, err := NewLMDBStorage(filepath.Join(tempDir, "benchmark.db"))
-	if err != nil {
+	if HasError(err) {
 		b.Fatalf("Failed to create storage: %v", err)
 	}
 	defer storage.Close()
@@ -115,13 +115,13 @@ func BenchmarkTTLOperations(b *testing.B) {
 
 func BenchmarkTTLCleanup(b *testing.B) {
 	tempDir, err := os.MkdirTemp("", "keyp_benchmark_cleanup_*")
-	if err != nil {
+	if HasError(err) {
 		b.Fatalf("Failed to create temp dir: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 
 	storage, err := NewLMDBStorage(filepath.Join(tempDir, "cleanup.db"))
-	if err != nil {
+	if HasError(err) {
 		b.Fatalf("Failed to create storage: %v", err)
 	}
 	defer storage.Close()
@@ -160,13 +160,13 @@ func benchmarkCleanupWithSize(b *testing.B, storage *LMDBStorage, ttlManager *LM
 
 func BenchmarkTTLConcurrent(b *testing.B) {
 	tempDir, err := os.MkdirTemp("", "keyp_benchmark_concurrent_*")
-	if err != nil {
+	if HasError(err) {
 		b.Fatalf("Failed to create temp dir: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 
 	storage, err := NewLMDBStorage(filepath.Join(tempDir, "concurrent.db"))
-	if err != nil {
+	if HasError(err) {
 		b.Fatalf("Failed to create storage: %v", err)
 	}
 	defer storage.Close()

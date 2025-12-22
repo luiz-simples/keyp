@@ -41,7 +41,7 @@ func NewLMDBTTLManager(storage *LMDBStorage) *LMDBTTLManager {
 
 func (manager *LMDBTTLManager) SetExpire(key []byte, seconds int64) (int, error) {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return ExpireFailure, err
 	}
 
@@ -49,7 +49,7 @@ func (manager *LMDBTTLManager) SetExpire(key []byte, seconds int64) (int, error)
 	if isNotFound(err) {
 		return ExpireFailure, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return ExpireFailure, err
 	}
 
@@ -60,7 +60,7 @@ func (manager *LMDBTTLManager) SetExpire(key []byte, seconds int64) (int, error)
 	expiresAt := calculateExpiresAt(seconds)
 
 	err = manager.ttlStorage.SetTTL(key, expiresAt)
-	if hasError(err) {
+	if HasError(err) {
 		return ExpireFailure, err
 	}
 
@@ -70,7 +70,7 @@ func (manager *LMDBTTLManager) SetExpire(key []byte, seconds int64) (int, error)
 
 func (manager *LMDBTTLManager) SetExpireAt(key []byte, timestamp int64) (int, error) {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return ExpireFailure, err
 	}
 
@@ -78,7 +78,7 @@ func (manager *LMDBTTLManager) SetExpireAt(key []byte, timestamp int64) (int, er
 	if isNotFound(err) {
 		return ExpireFailure, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return ExpireFailure, err
 	}
 
@@ -87,7 +87,7 @@ func (manager *LMDBTTLManager) SetExpireAt(key []byte, timestamp int64) (int, er
 	}
 
 	err = manager.ttlStorage.SetTTL(key, timestamp)
-	if hasError(err) {
+	if HasError(err) {
 		return ExpireFailure, err
 	}
 
@@ -97,7 +97,7 @@ func (manager *LMDBTTLManager) SetExpireAt(key []byte, timestamp int64) (int, er
 
 func (manager *LMDBTTLManager) GetTTL(key []byte) (int64, error) {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return TTLNotFound, err
 	}
 
@@ -105,7 +105,7 @@ func (manager *LMDBTTLManager) GetTTL(key []byte) (int64, error) {
 	if isNotFound(err) {
 		return TTLNotFound, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return TTLNotFound, err
 	}
 
@@ -113,7 +113,7 @@ func (manager *LMDBTTLManager) GetTTL(key []byte) (int64, error) {
 	if err == ErrTTLNotFound {
 		return TTLPersistent, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return TTLNotFound, err
 	}
 
@@ -127,7 +127,7 @@ func (manager *LMDBTTLManager) GetTTL(key []byte) (int64, error) {
 
 func (manager *LMDBTTLManager) GetPTTL(key []byte) (int64, error) {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return TTLNotFound, err
 	}
 
@@ -135,7 +135,7 @@ func (manager *LMDBTTLManager) GetPTTL(key []byte) (int64, error) {
 	if isNotFound(err) {
 		return TTLNotFound, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return TTLNotFound, err
 	}
 
@@ -143,7 +143,7 @@ func (manager *LMDBTTLManager) GetPTTL(key []byte) (int64, error) {
 	if err == ErrTTLNotFound {
 		return TTLPersistent, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return TTLNotFound, err
 	}
 
@@ -157,7 +157,7 @@ func (manager *LMDBTTLManager) GetPTTL(key []byte) (int64, error) {
 
 func (manager *LMDBTTLManager) Persist(key []byte) (int, error) {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return PersistFailure, err
 	}
 
@@ -165,7 +165,7 @@ func (manager *LMDBTTLManager) Persist(key []byte) (int, error) {
 	if isNotFound(err) {
 		return PersistFailure, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return PersistFailure, err
 	}
 
@@ -173,7 +173,7 @@ func (manager *LMDBTTLManager) Persist(key []byte) (int, error) {
 	if err == ErrTTLNotFound {
 		return PersistFailure, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return PersistFailure, err
 	}
 
@@ -183,7 +183,7 @@ func (manager *LMDBTTLManager) Persist(key []byte) (int, error) {
 
 func (manager *LMDBTTLManager) IsExpired(key []byte) (bool, error) {
 	err := validateTTLKey(key)
-	if hasError(err) {
+	if HasError(err) {
 		return false, err
 	}
 
@@ -191,7 +191,7 @@ func (manager *LMDBTTLManager) IsExpired(key []byte) (bool, error) {
 	if err == ErrTTLNotFound {
 		return false, nil
 	}
-	if hasError(err) {
+	if HasError(err) {
 		return false, err
 	}
 
@@ -204,12 +204,12 @@ func (manager *LMDBTTLManager) CleanupExpired() error {
 	now := time.Now().Unix()
 
 	expiredKeys, err := manager.ttlStorage.GetExpiredKeys(now)
-	if hasError(err) {
+	if HasError(err) {
 		manager.metrics.RecordCleanupError()
 		return err
 	}
 
-	if isEmpty(expiredKeys) {
+	if IsEmpty(expiredKeys) {
 		manager.metrics.RecordCleanupEnd(startTime, 0)
 		return nil
 	}
@@ -217,13 +217,13 @@ func (manager *LMDBTTLManager) CleanupExpired() error {
 	keysExpired := len(expiredKeys)
 
 	_, err = manager.storage.Del(expiredKeys...)
-	if hasError(err) {
+	if HasError(err) {
 		manager.metrics.RecordCleanupError()
 		return err
 	}
 
 	err = manager.ttlStorage.RemoveTTLBatch(expiredKeys)
-	if hasError(err) {
+	if HasError(err) {
 		manager.metrics.RecordCleanupError()
 		return err
 	}

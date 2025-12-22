@@ -74,7 +74,7 @@ var _ = Describe("TTL Command Property Tests", func() {
 
 			properties.Property("expire command validation", prop.ForAll(
 				func(keyData []byte, seconds int64) bool {
-					if len(keyData) == 0 || len(keyData) > 100 {
+					if server.IsEmpty(keyData) || len(keyData) > 100 {
 						return true
 					}
 
@@ -86,7 +86,7 @@ var _ = Describe("TTL Command Property Tests", func() {
 					value := "prop_value"
 
 					err := client.Set(ctx, key, value, 0).Err()
-					if err != nil {
+					if server.HasError(err) {
 						return false
 					}
 
@@ -128,7 +128,7 @@ var _ = Describe("TTL Command Property Tests", func() {
 
 			properties.Property("expireat command validation", prop.ForAll(
 				func(keyData []byte, offsetSeconds int64) bool {
-					if len(keyData) == 0 || len(keyData) > 100 {
+					if server.IsEmpty(keyData) || len(keyData) > 100 {
 						return true
 					}
 
@@ -141,7 +141,7 @@ var _ = Describe("TTL Command Property Tests", func() {
 					timestamp := time.Now().Unix() + offsetSeconds
 
 					err := client.Set(ctx, key, value, 0).Err()
-					if err != nil {
+					if server.HasError(err) {
 						return false
 					}
 
@@ -192,7 +192,7 @@ var _ = Describe("TTL Command Property Tests", func() {
 					value := "prop_value"
 
 					err := client.Set(ctx, key, value, 0).Err()
-					if err != nil {
+					if server.HasError(err) {
 						return false
 					}
 
@@ -273,7 +273,7 @@ var _ = Describe("TTL Command Property Tests", func() {
 					value := "prop_value"
 
 					err := client.Set(ctx, key, value, 0).Err()
-					if err != nil {
+					if server.HasError(err) {
 						return false
 					}
 
@@ -334,7 +334,7 @@ var _ = Describe("TTL Command Property Tests", func() {
 			}
 
 			for _, cmdArgs := range invalidCommands {
-				args := make([]interface{}, len(cmdArgs))
+				args := make([]any, len(cmdArgs))
 				for i, arg := range cmdArgs {
 					args[i] = arg
 				}
@@ -361,7 +361,7 @@ var _ = Describe("TTL Command Property Tests", func() {
 			}
 
 			for _, cmdArgs := range invalidNumericCommands {
-				args := make([]interface{}, len(cmdArgs))
+				args := make([]any, len(cmdArgs))
 				for i, arg := range cmdArgs {
 					args[i] = arg
 				}
@@ -395,7 +395,8 @@ var _ = Describe("TTL Command Property Tests", func() {
 				result := client.Do(ctx, tc.command, key, tc.value)
 				if tc.shouldErr {
 					Expect(result.Err()).To(HaveOccurred())
-				} else {
+				}
+				if !tc.shouldErr {
 					Expect(result.Err()).NotTo(HaveOccurred())
 				}
 			}

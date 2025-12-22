@@ -19,8 +19,15 @@ const (
 	secondArg   = 2
 )
 
-func hasError(err error) bool {
+func HasError(err error) bool {
 	return err != nil
+}
+
+func IsEmpty(data any) bool {
+	if byteSlice, ok := data.([]byte); ok {
+		return len(byteSlice) == 0
+	}
+	return false
 }
 
 func emptyArgs(cmd redcon.Command) bool {

@@ -22,13 +22,13 @@ type Server struct {
 
 func New(addr, dataDir string) (*Server, error) {
 	storage, err := storage.NewLMDBStorage(dataDir)
-	if hasError(err) {
+	if HasError(err) {
 		return nil, err
 	}
 
 	ttlManager := storage.GetTTLManager()
 	err = ttlManager.RestoreTTL()
-	if hasError(err) {
+	if HasError(err) {
 		logger.Error("TTL restoration failed", "error", err)
 	}
 
@@ -73,7 +73,7 @@ func (server *Server) handleConnect(conn redcon.Conn) bool {
 
 func (server *Server) handleClose(conn redcon.Conn, err error) {
 	logger.Debug("Client disconnected", "addr", conn.RemoteAddr())
-	if hasError(err) {
+	if HasError(err) {
 		logger.Error("Connection error", "error", err)
 	}
 }
@@ -125,7 +125,7 @@ func (server *Server) startBackgroundCleanup() {
 func (server *Server) performCleanup() {
 	ttlManager := server.storage.GetTTLManager()
 	err := ttlManager.CleanupExpired()
-	if hasError(err) {
+	if HasError(err) {
 		logger.Error("Background cleanup failed", "error", err)
 		return
 	}

@@ -283,7 +283,7 @@ var _ = Describe("TTL Commands Complete Integration Tests", func() {
 			}
 
 			for _, tc := range errorTestCases {
-				args := make([]interface{}, len(tc.command))
+				args := make([]any, len(tc.command))
 				for i, arg := range tc.command {
 					args[i] = arg
 				}
@@ -316,7 +316,7 @@ var _ = Describe("TTL Commands Complete Integration Tests", func() {
 			}
 
 			for _, cmdArgs := range caseVariations {
-				args := make([]interface{}, len(cmdArgs))
+				args := make([]any, len(cmdArgs))
 				for i, arg := range cmdArgs {
 					args[i] = arg
 				}

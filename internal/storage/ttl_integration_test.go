@@ -54,7 +54,7 @@ var _ = Describe("TTL Integration Tests", func() {
 
 			properties.Property("expiration consistency", prop.ForAll(
 				func(keyData []byte, seconds int64) bool {
-					if len(keyData) == 0 || len(keyData) > 100 {
+					if storage.IsEmpty(keyData) || len(keyData) > 100 {
 						return true
 					}
 
@@ -66,17 +66,17 @@ var _ = Describe("TTL Integration Tests", func() {
 					value := []byte("test_value")
 
 					err := testStorage.Set(key, value)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					result, err := ttlManager.SetExpire(key, seconds)
-					if err != nil || result != storage.ExpireSuccess {
+					if storage.HasError(err) || result != storage.ExpireSuccess {
 						return false
 					}
 
 					ttl, err := ttlManager.GetTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -85,12 +85,12 @@ var _ = Describe("TTL Integration Tests", func() {
 					}
 
 					expired, err := ttlManager.IsExpired(key)
-					if err != nil || expired {
+					if storage.HasError(err) || expired {
 						return false
 					}
 
 					retrievedValue, err := testStorage.Get(key)
-					if err != nil || string(retrievedValue) != string(value) {
+					if storage.HasError(err) || string(retrievedValue) != string(value) {
 						return false
 					}
 

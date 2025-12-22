@@ -7,11 +7,11 @@ import (
 	"github.com/PowerDNS/lmdb-go/lmdb"
 )
 
-func hasError(err error) bool {
+func HasError(err error) bool {
 	return err != nil
 }
 
-func isEmpty(data any) bool {
+func IsEmpty(data any) bool {
 	if byteSlice, ok := data.([]byte); ok {
 		return len(byteSlice) == 0
 	}
@@ -35,7 +35,7 @@ func isNotFound(err error) bool {
 }
 
 func validateTTLKey(key []byte) error {
-	if isEmpty(key) {
+	if IsEmpty(key) {
 		return ErrEmptyKey
 	}
 

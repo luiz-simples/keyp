@@ -53,7 +53,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties.Property("TTL setting consistency", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
-					if len(key) == 0 || len(key) > storage.MaxKeySize {
+					if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 						return true
 					}
 
@@ -64,14 +64,14 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					testValue := []byte("test:value")
 
 					err := lmdbStorage.Set(key, testValue)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					ttlManager := storage.NewLMDBTTLManager(lmdbStorage)
 
 					result, err := ttlManager.SetExpire(key, ttlSeconds)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -80,7 +80,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					}
 
 					actualTTL, err := ttlManager.GetTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -95,7 +95,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 					futureTimestamp := time.Now().Unix() + ttlSeconds
 					result, err = ttlManager.SetExpireAt(key, futureTimestamp)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -104,7 +104,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					}
 
 					actualTTL, err = ttlManager.GetTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -134,7 +134,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties.Property("TTL query accuracy", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
-					if len(key) == 0 || len(key) > storage.MaxKeySize {
+					if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 						return true
 					}
 
@@ -145,19 +145,19 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					testValue := []byte("test:value")
 
 					err := lmdbStorage.Set(key, testValue)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					ttlManager := storage.NewLMDBTTLManager(lmdbStorage)
 
 					result, err := ttlManager.SetExpire(key, ttlSeconds)
-					if err != nil || result != storage.ExpireSuccess {
+					if storage.HasError(err) || result != storage.ExpireSuccess {
 						return false
 					}
 
 					actualTTL, err := ttlManager.GetTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -168,7 +168,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					time.Sleep(1 * time.Millisecond)
 
 					secondTTL, err := ttlManager.GetTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -177,7 +177,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					}
 
 					actualPTTL, err := ttlManager.GetPTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -193,29 +193,29 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 					ttlStorageInstance := lmdbStorage.GetTTLStorage()
 					err = ttlStorageInstance.RemoveTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					persistentTTL, err := ttlManager.GetTTL(key)
-					if err != nil || persistentTTL != storage.TTLPersistent {
+					if storage.HasError(err) || persistentTTL != storage.TTLPersistent {
 						return false
 					}
 
 					persistentPTTL, err := ttlManager.GetPTTL(key)
-					if err != nil || persistentPTTL != storage.TTLPersistent {
+					if storage.HasError(err) || persistentPTTL != storage.TTLPersistent {
 						return false
 					}
 
 					lmdbStorage.Del(key)
 
 					nonExistentTTL, err := ttlManager.GetTTL(key)
-					if err != nil || nonExistentTTL != storage.TTLNotFound {
+					if storage.HasError(err) || nonExistentTTL != storage.TTLNotFound {
 						return false
 					}
 
 					nonExistentPTTL, err := ttlManager.GetPTTL(key)
-					if err != nil || nonExistentPTTL != storage.TTLNotFound {
+					if storage.HasError(err) || nonExistentPTTL != storage.TTLNotFound {
 						return false
 					}
 
@@ -239,7 +239,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties.Property("persist operation idempotency", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
-					if len(key) == 0 || len(key) > storage.MaxKeySize {
+					if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 						return true
 					}
 
@@ -250,24 +250,24 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					testValue := []byte("test:value")
 
 					err := lmdbStorage.Set(key, testValue)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					ttlManager := storage.NewLMDBTTLManager(lmdbStorage)
 
 					result, err := ttlManager.SetExpire(key, ttlSeconds)
-					if err != nil || result != storage.ExpireSuccess {
+					if storage.HasError(err) || result != storage.ExpireSuccess {
 						return false
 					}
 
 					ttl, err := ttlManager.GetTTL(key)
-					if err != nil || ttl <= 0 {
+					if storage.HasError(err) || ttl <= 0 {
 						return false
 					}
 
 					persistResult1, err := ttlManager.Persist(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -276,12 +276,12 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					}
 
 					ttlAfterPersist, err := ttlManager.GetTTL(key)
-					if err != nil || ttlAfterPersist != storage.TTLPersistent {
+					if storage.HasError(err) || ttlAfterPersist != storage.TTLPersistent {
 						return false
 					}
 
 					persistResult2, err := ttlManager.Persist(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -290,12 +290,12 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					}
 
 					ttlAfterSecondPersist, err := ttlManager.GetTTL(key)
-					if err != nil || ttlAfterSecondPersist != storage.TTLPersistent {
+					if storage.HasError(err) || ttlAfterSecondPersist != storage.TTLPersistent {
 						return false
 					}
 
 					persistResult3, err := ttlManager.Persist(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -304,14 +304,14 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					}
 
 					value, err := lmdbStorage.Get(key)
-					if err != nil || string(value) != string(testValue) {
+					if storage.HasError(err) || string(value) != string(testValue) {
 						return false
 					}
 
 					lmdbStorage.Del(key)
 
 					nonExistentResult, err := ttlManager.Persist(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -339,7 +339,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties.Property("TTL persistence round-trip", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
-					if len(key) == 0 || len(key) > storage.MaxKeySize {
+					if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 						return true
 					}
 
@@ -351,12 +351,12 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					expiresAt := now + ttlSeconds
 
 					err := ttlStorage.SetTTL(key, expiresAt)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					metadata, err := ttlStorage.GetTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -368,14 +368,14 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					lmdbStorage.Close()
 
 					newStorage, err := storage.NewLMDBStorage(originalTmpDir)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					newTTLStorage := newStorage.GetTTLStorage()
 
 					restoredMetadata, err := newTTLStorage.GetTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						newStorage.Close()
 						return false
 					}
@@ -387,7 +387,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					newStorage.Close()
 
 					lmdbStorage, err = storage.NewLMDBStorage(originalTmpDir)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 					ttlStorage = lmdbStorage.GetTTLStorage()
@@ -410,7 +410,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 
 			properties.Property("TTL removal consistency", prop.ForAll(
 				func(key []byte, ttlSeconds int64) bool {
-					if len(key) == 0 || len(key) > storage.MaxKeySize {
+					if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 						return true
 					}
 
@@ -422,12 +422,12 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					expiresAt := now + ttlSeconds
 
 					err := ttlStorage.SetTTL(key, expiresAt)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					err = ttlStorage.RemoveTTL(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -461,7 +461,7 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					for i := range keyCount {
 						key := []byte(fmt.Sprintf("prop:key:%d:%d:%d", baseTime, randomSeed, i))
 
-						if len(key) == 0 || len(key) > storage.MaxKeySize {
+						if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 							continue
 						}
 
@@ -469,18 +469,19 @@ var _ = Describe("TTL Storage Property Tests", func() {
 						if i%2 == 0 {
 							expiresAt = baseTime - 100
 							expiredCount++
-						} else {
+						}
+						if i%2 != 0 {
 							expiresAt = baseTime + 100
 						}
 
 						err := ttlStorage.SetTTL(key, expiresAt)
-						if err != nil {
+						if storage.HasError(err) {
 							return false
 						}
 					}
 
 					expiredKeys, err := ttlStorage.GetExpiredKeys(baseTime)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -519,23 +520,23 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					expiresAt := now + ttlSeconds
 
 					for _, key := range keys {
-						if len(key) == 0 || len(key) > storage.MaxKeySize {
+						if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 							continue
 						}
 
 						validKeys = append(validKeys, key)
 						err := ttlStorage.SetTTL(key, expiresAt)
-						if err != nil {
+						if storage.HasError(err) {
 							return false
 						}
 					}
 
-					if len(validKeys) == 0 {
+					if storage.IsEmpty(validKeys) {
 						return true
 					}
 
 					err := ttlStorage.RemoveTTLBatch(validKeys)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 

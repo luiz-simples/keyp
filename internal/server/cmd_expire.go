@@ -16,14 +16,14 @@ func (server *Server) handleExpire(conn redcon.Conn, cmd redcon.Command) {
 	secondsStr := string(cmd.Args[secondArg])
 
 	seconds, err := strconv.ParseInt(secondsStr, 10, 64)
-	if hasError(err) {
+	if HasError(err) {
 		conn.WriteError("ERR value is not an integer or out of range")
 		return
 	}
 
 	ttlManager := server.storage.GetTTLManager()
 	result, err := ttlManager.SetExpire(key, seconds)
-	if hasError(err) {
+	if HasError(err) {
 		conn.WriteError("ERR " + err.Error())
 		return
 	}

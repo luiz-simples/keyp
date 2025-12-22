@@ -369,7 +369,8 @@ var _ = Describe("TTL Comprehensive Integration Tests", func() {
 
 				if i%2 == 0 {
 					Expect(ttl.Val().Seconds()).To(BeNumerically(">", float64(115+i)))
-				} else {
+				}
+			if i%2 != 0 {
 					Expect(ttl.Val()).To(Equal(-1 * time.Nanosecond))
 				}
 			}

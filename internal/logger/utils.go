@@ -4,11 +4,11 @@ import (
 	"os"
 )
 
-func hasError(err error) bool {
+func HasError(err error) bool {
 	return err != nil
 }
 
-func isEmpty(data string) bool {
+func IsEmpty(data string) bool {
 	return len(data) == 0
 }
 
@@ -26,7 +26,7 @@ func isValidLevel(level string) bool {
 
 func getEnvWithDefault(key, defaultValue string) string {
 	value := os.Getenv(key)
-	if isEmpty(value) {
+	if IsEmpty(value) {
 		return defaultValue
 	}
 	return value

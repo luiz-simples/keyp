@@ -47,17 +47,17 @@ var _ = Describe("LMDB Property Tests", func() {
 
 			properties.Property("set-get roundtrip", prop.ForAll(
 				func(key, value []byte) bool {
-					if len(key) == 0 || len(key) > storage.MaxKeySize {
+					if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 						return true
 					}
 
 					err := lmdbStorage.Set(key, value)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					retrieved, err := lmdbStorage.Get(key)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -112,24 +112,24 @@ var _ = Describe("LMDB Property Tests", func() {
 					expectedCount := 0
 
 					for _, key := range keys {
-						if len(key) == 0 || len(key) > storage.MaxKeySize {
+						if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 							continue
 						}
 
 						validKeys = append(validKeys, key)
 						err := lmdbStorage.Set(key, []byte("test"))
-						if err != nil {
+						if storage.HasError(err) {
 							return false
 						}
 						expectedCount++
 					}
 
-					if len(validKeys) == 0 {
+					if storage.IsEmpty(validKeys) {
 						return true
 					}
 
 					deleted, err := lmdbStorage.Del(validKeys...)
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
@@ -150,22 +150,22 @@ var _ = Describe("LMDB Property Tests", func() {
 
 			properties.Property("delete is idempotent", prop.ForAll(
 				func(key []byte) bool {
-					if len(key) == 0 || len(key) > storage.MaxKeySize {
+					if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 						return true
 					}
 
 					err := lmdbStorage.Set(key, []byte("test"))
-					if err != nil {
+					if storage.HasError(err) {
 						return false
 					}
 
 					firstDel, err := lmdbStorage.Del(key)
-					if err != nil || firstDel != 1 {
+					if storage.HasError(err) || firstDel != 1 {
 						return false
 					}
 
 					secondDel, err := lmdbStorage.Del(key)
-					if err != nil || secondDel != 0 {
+					if storage.HasError(err) || secondDel != 0 {
 						return false
 					}
 
@@ -188,7 +188,7 @@ var _ = Describe("LMDB Property Tests", func() {
 
 			properties.Property("get non-existent key returns error", prop.ForAll(
 				func(key []byte) bool {
-					if len(key) == 0 || len(key) > storage.MaxKeySize {
+					if storage.IsEmpty(key) || len(key) > storage.MaxKeySize {
 						return true
 					}
 

@@ -323,13 +323,13 @@ func BenchmarkTTLRedisProtocol(b *testing.B) {
 	os.Setenv("KEYP_TEST_MODE", "true")
 
 	tmpDir, err := os.MkdirTemp("", "keyp_benchmark_redis_*")
-	if err != nil {
+	if server.HasError(err) {
 		b.Fatalf("Failed to create temp dir: %v", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
 	srv, err := server.New("localhost:6382", tmpDir)
-	if err != nil {
+	if server.HasError(err) {
 		b.Fatalf("Failed to create server: %v", err)
 	}
 
@@ -345,7 +345,7 @@ func BenchmarkTTLRedisProtocol(b *testing.B) {
 
 	ctx := context.Background()
 	err = client.Ping(ctx).Err()
-	if err != nil {
+	if server.HasError(err) {
 		b.Fatalf("Failed to connect to server: %v", err)
 	}
 
@@ -428,13 +428,13 @@ func BenchmarkTTLConcurrentRedis(b *testing.B) {
 	os.Setenv("KEYP_TEST_MODE", "true")
 
 	tmpDir, err := os.MkdirTemp("", "keyp_benchmark_concurrent_redis_*")
-	if err != nil {
+	if server.HasError(err) {
 		b.Fatalf("Failed to create temp dir: %v", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
 	srv, err := server.New("localhost:6383", tmpDir)
-	if err != nil {
+	if server.HasError(err) {
 		b.Fatalf("Failed to create server: %v", err)
 	}
 

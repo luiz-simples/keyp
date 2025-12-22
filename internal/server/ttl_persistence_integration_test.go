@@ -34,7 +34,7 @@ var _ = Describe("TTL Persistence Integration Tests", func() {
 		go func() {
 			defer GinkgoRecover()
 			serverErr := server.ListenAndServe()
-			if serverErr != nil {
+			if HasError(serverErr) {
 				GinkgoLogr.Error(serverErr, "Server failed to start")
 			}
 		}()
@@ -70,7 +70,7 @@ var _ = Describe("TTL Persistence Integration Tests", func() {
 		go func() {
 			defer GinkgoRecover()
 			serverErr := server.ListenAndServe()
-			if serverErr != nil {
+			if HasError(serverErr) {
 				GinkgoLogr.Error(serverErr, "Server failed to restart")
 			}
 		}()
@@ -308,7 +308,8 @@ var _ = Describe("TTL Persistence Integration Tests", func() {
 
 				if i%2 == 0 {
 					Expect(ttl.Val()).To(BeNumerically(">", 230*time.Second))
-				} else {
+				}
+				if i%2 != 0 {
 					Expect(ttl.Val()).To(Equal(-1 * time.Nanosecond))
 				}
 			}

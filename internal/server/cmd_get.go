@@ -11,7 +11,7 @@ func (server *Server) handleGet(conn redcon.Conn, cmd redcon.Command) {
 	key := cmd.Args[firstArg]
 	value, err := server.storage.Get(key)
 
-	if hasError(err) {
+	if HasError(err) {
 		if isKeyNotFoundError(err) {
 			conn.WriteNull()
 			return

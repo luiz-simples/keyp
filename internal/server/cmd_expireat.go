@@ -16,14 +16,14 @@ func (server *Server) handleExpireAt(conn redcon.Conn, cmd redcon.Command) {
 	timestampStr := string(cmd.Args[secondArg])
 
 	timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
-	if hasError(err) {
+	if HasError(err) {
 		conn.WriteError("ERR value is not an integer or out of range")
 		return
 	}
 
 	ttlManager := server.storage.GetTTLManager()
 	result, err := ttlManager.SetExpireAt(key, timestamp)
-	if hasError(err) {
+	if HasError(err) {
 		conn.WriteError("ERR " + err.Error())
 		return
 	}
