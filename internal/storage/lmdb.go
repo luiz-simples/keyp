@@ -203,9 +203,15 @@ func (storage *LMDBStorage) GetTTLManager() TTLManager {
 }
 
 func (storage *LMDBStorage) cleanupExpiredKey(key []byte) {
-	storage.Del(key)
+	_, err := storage.Del(key)
+	if hasError(err) {
+		return
+	}
 }
 
 func (storage *LMDBStorage) cleanupTTLMetadata(key []byte) {
-	storage.ttlStorage.RemoveTTL(key)
+	err := storage.ttlStorage.RemoveTTL(key)
+	if hasError(err) {
+		return
+	}
 }

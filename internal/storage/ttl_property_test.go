@@ -218,8 +218,8 @@ var _ = Describe("TTL Storage Property Tests", func() {
 					}
 
 					// Test persistent key behavior
-					ttlStorage := lmdbStorage.GetTTLStorage()
-					err = ttlStorage.RemoveTTL(key)
+					ttlStorageInstance := lmdbStorage.GetTTLStorage()
+					err = ttlStorageInstance.RemoveTTL(key)
 					if err != nil {
 						return false
 					}

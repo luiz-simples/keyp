@@ -334,7 +334,7 @@ var _ = Describe("Integration Tests", func() {
 				Expect(pttlResult.Err()).NotTo(HaveOccurred())
 
 				// PTTL should be in milliseconds (roughly 1000x the TTL)
-				actualPTTL := int64(pttlResult.Val().Milliseconds())
+				actualPTTL := pttlResult.Val().Milliseconds()
 				expectedPTTLMin := (ttlSeconds - 5) * 1000
 				expectedPTTLMax := ttlSeconds * 1000
 
@@ -426,14 +426,14 @@ var _ = Describe("Integration Tests", func() {
 				// Test PTTL precision during the same period
 				firstPTTL := client.PTTL(ctx, key)
 				Expect(firstPTTL.Err()).NotTo(HaveOccurred())
-				firstPTTLValue := int64(firstPTTL.Val().Milliseconds())
+				firstPTTLValue := firstPTTL.Val().Milliseconds()
 				Expect(firstPTTLValue).To(BeNumerically(">", 0))
 
 				time.Sleep(50 * time.Millisecond)
 
 				secondPTTL := client.PTTL(ctx, key)
 				Expect(secondPTTL.Err()).NotTo(HaveOccurred())
-				secondPTTLValue := int64(secondPTTL.Val().Milliseconds())
+				secondPTTLValue := secondPTTL.Val().Milliseconds()
 				Expect(secondPTTLValue).To(BeNumerically("<=", firstPTTLValue))
 			})
 
@@ -820,9 +820,7 @@ var _ = Describe("Integration Tests", func() {
 
 				result := client.Expire(ctx, key, 0)
 				Expect(result.Err()).NotTo(HaveOccurred())
-				// Zero TTL behavior may vary - check if key still exists
-				_, err = client.Get(ctx, key).Result()
-				// Either key exists or returns redis.Nil - both are acceptable
+				client.Get(ctx, key)
 			})
 
 			It("should handle concurrent EXPIRE/EXPIREAT operations", func() {
