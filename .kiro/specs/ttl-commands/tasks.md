@@ -125,37 +125,37 @@ Implementation of TTL (Time To Live) system for Keyp server with Redis-compatibl
     - Validate TTL metadata consistency via Redis protocol
     - _Requirements: 4.2, 4.3, 5.1, 5.2, 5.3_
 
-- [ ] 6. Implement TTL command handlers
+- [x] 6. Implement TTL command handlers
   - [x] 6.1 Create cmd_expire.go
     - Implement handleExpire with argument validation
     - Add seconds parsing and validation
     - _Requirements: 1.1, 6.1, 6.2, 6.3_
 
-  - [ ] 6.2 Create cmd_expireat.go
+  - [x] 6.2 Create cmd_expireat.go
     - Implement handleExpireAt with timestamp validation
     - Add Unix timestamp parsing and validation
     - _Requirements: 1.2, 6.1, 6.4_
 
-  - [ ] 6.3 Create cmd_ttl.go
+  - [x] 6.3 Create cmd_ttl.go
     - Implement handleTTL with proper return codes
     - Handle persistent and non-existent key cases
     - _Requirements: 2.1, 2.2, 2.3, 6.1_
 
-  - [ ] 6.4 Create cmd_pttl.go
+  - [x] 6.4 Create cmd_pttl.go
     - Implement handlePTTL with millisecond precision
     - Handle persistent and non-existent key cases
     - _Requirements: 2.4, 2.5, 6.1_
 
-  - [ ] 6.5 Create cmd_persist.go
+  - [x] 6.5 Create cmd_persist.go
     - Implement handlePersist with proper return codes
     - Handle already persistent and non-existent keys
     - _Requirements: 3.1, 3.2, 3.3, 6.1_
 
-  - [ ]* 6.6 Write property test for command validation
+  - [x] 6.6 Write property test for command validation
     - **Property 6: Command Validation Consistency**
     - **Validates: Requirements 6.1**
 
-  - [ ]* 6.7 Write integration tests for all TTL commands with go-redis
+  - [x] 6.7 Write integration tests for all TTL commands with go-redis
     - Test complete TTL command suite via Redis client
     - Test Redis protocol compatibility for all TTL commands
     - Test error messages and response formats match Redis
