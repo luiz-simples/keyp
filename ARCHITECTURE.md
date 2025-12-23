@@ -1,5 +1,7 @@
 # Keyp Architecture Documentation
 
+> 📖 **For project overview and quick start guide, see [README.md](README.md)**
+
 ## Overview
 
 Keyp is a Redis-compatible key-value server implemented in Go with LMDB as the persistence backend. The architecture follows clean separation of concerns with a layered design optimized for performance and maintainability.
@@ -8,7 +10,7 @@ Keyp is a Redis-compatible key-value server implemented in Go with LMDB as the p
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Client Applications                       │
+│                    Client Applications                      │
 └─────────────────────┬───────────────────────────────────────┘
                       │ Redis Protocol (TCP)
 ┌─────────────────────▼───────────────────────────────────────┐
@@ -34,7 +36,7 @@ Keyp is a Redis-compatible key-value server implemented in Go with LMDB as the p
 │                  Storage Interface                          │
 │              • LMDB Operations                              │
 │              • TTL Management                               │
-│              • Context cancellation                        │
+│              • Context cancellation                         │
 └─────────────────────┬───────────────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────────────┐

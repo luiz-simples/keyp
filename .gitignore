@@ -59,3 +59,5 @@ data/
 tmp/
 temp/
 *.html
+.kiro/
+benchmarks/results/
