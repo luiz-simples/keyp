@@ -1,115 +1,115 @@
-# Keyp - Estratégia de Testes
+# Keyp - Testing Strategy
 
-> **Documentação Relacionada**: [README.md](README.md) | [ARCHITECTURE.md](ARCHITECTURE.md)
+> **Related Documentation**: [README.md](README.md) | [ARCHITECTURE.md](ARCHITECTURE.md)
 
-## Visão Geral
+## Overview
 
-Este documento descreve a estratégia completa de testes do projeto Keyp, implementada seguindo os padrões de código definidos no projeto.
+This document describes the complete testing strategy for the Keyp project, implemented following the code standards defined in the project.
 
-## Cobertura Atual
+## Current Coverage
 
-### ✅ Package `internal/service` (Completo)
+### ✅ Package `internal/service` (Complete)
 
-Implementação completa de 4 tipos de testes com isolamento total e paralelização segura.
+Complete implementation of 4 test types with total isolation and safe parallelization.
 
 #### 🧪 Unit Tests
-- **Arquivo**: `internal/service/unit_test.go`
+- **File**: `internal/service/unit_test.go`
 - **Framework**: Ginkgo + Gomega + GoMock
-- **Cobertura**: Comandos básicos (PING, SET, GET, DEL), comandos de lista (EXISTS, LINDEX, LLEN, LPOP, LPUSH, LRANGE, LSET, RPOP, RPUSH), comandos de set (FLUSHALL, SADD, SREM, SMEMBERS, SISMEMBER), comandos de sorted set (ZADD, ZRANGE, ZCOUNT), comandos numéricos (INCR, INCRBY, DECR, DECRBY) e comando de string (APPEND)
-- **Cenários**: Sucesso, erro, contexto cancelado, validação, operações de lista
-- **Mocks**: Gerados com `mockgen` para `domain.Persister`
+- **Coverage**: Basic commands (PING, SET, GET, DEL), list commands (EXISTS, LINDEX, LLEN, LPOP, LPUSH, LRANGE, LSET, RPOP, RPUSH), set commands (FLUSHALL, SADD, SREM, SMEMBERS, SISMEMBER), sorted set commands (ZADD, ZRANGE, ZCOUNT), numeric commands (INCR, INCRBY, DECR, DECRBY) and string command (APPEND)
+- **Scenarios**: Success, error, canceled context, validation, list operations
+- **Mocks**: Generated with `mockgen` for `domain.Persister`
 
 #### 🔗 Integration Tests  
-- **Arquivo**: `internal/service/integration_test.go`
+- **File**: `internal/service/integration_test.go`
 - **Framework**: Ginkgo + Gomega + go-redis
-- **Cobertura**: Servidor Redis real com cliente go-redis, comandos básicos, de lista, de set, de sorted set, numéricos e de string
-- **Cenários**: Operações básicas, operações de lista, concorrência, valores grandes
-- **Protocolo**: Compatibilidade completa com Redis
+- **Coverage**: Real Redis server with go-redis client, basic, list, set, sorted set, numeric and string commands
+- **Scenarios**: Basic operations, list operations, concurrency, large values
+- **Protocol**: Full Redis compatibility
 
 #### 🎯 Property-Based Tests
-- **Arquivo**: `internal/service/property_test.go` 
+- **File**: `internal/service/property_test.go` 
 - **Framework**: Ginkgo + Gomega + Gopter
-- **Cobertura**: Propriedades fundamentais (SET-GET, DEL, EXISTS), operações de lista, operações de set, operações de sorted set e operações numéricas
-- **Cenários**: 100 testes por propriedade com dados aleatórios
-- **Validação**: Invariantes e comportamentos esperados para strings e listas
+- **Coverage**: Fundamental properties (SET-GET, DEL, EXISTS), list operations, set operations, sorted set operations and numeric operations
+- **Scenarios**: 100 tests per property with random data
+- **Validation**: Invariants and expected behaviors for strings and lists
 
 #### ⚡ Performance Tests
-- **Arquivo**: `internal/service/performance_test.go`
-- **Framework**: Ginkgo + Benchmarks Go nativos
-- **Cobertura**: Métricas de performance para comandos básicos e de lista
-- **Cenários**: SET, GET, DEL, PING, EXISTS, operações de lista (LPUSH, RPUSH, etc.)
-- **Benchmarks**: Métricas precisas de ns/op
+- **File**: `internal/service/performance_test.go`
+- **Framework**: Ginkgo + Native Go Benchmarks
+- **Coverage**: Performance metrics for basic and list commands
+- **Scenarios**: SET, GET, DEL, PING, EXISTS, list operations (LPUSH, RPUSH, etc.)
+- **Benchmarks**: Precise ns/op metrics
 
-### ✅ Package `internal/storage` (Completo)
+### ✅ Package `internal/storage` (Complete)
 
-Implementação completa de 4 tipos de testes para o sistema de persistência LMDB com isolamento total.
+Complete implementation of 4 test types for the LMDB persistence system with total isolation.
 
-#### 🧪 Unit Tests (26 testes)
-- **Arquivo**: `internal/storage/unit_test.go`
+#### 🧪 Unit Tests (26 tests)
+- **File**: `internal/storage/unit_test.go`
 - **Framework**: Ginkgo + Gomega
-- **Cobertura**: Todas as operações LMDB (Set, Get, Del, TTL, Expire, Persist, EXISTS, operações de lista)
-- **Cenários**: Criação de cliente, isolamento de databases, tratamento de erros
-- **Validação**: Chaves vazias, valores grandes, contextos cancelados, operações de lista
+- **Coverage**: All LMDB operations (Set, Get, Del, TTL, Expire, Persist, EXISTS, list operations)
+- **Scenarios**: Client creation, database isolation, error handling
+- **Validation**: Empty keys, large values, canceled contexts, list operations
 
-#### 🔗 Integration Tests (12 testes)
-- **Arquivo**: `internal/storage/integration_test.go`
+#### 🔗 Integration Tests (12 tests)
+- **File**: `internal/storage/integration_test.go`
 - **Framework**: Ginkgo + Gomega
-- **Cobertura**: Instâncias reais do LMDB com operações concorrentes
-- **Cenários**: Múltiplas goroutines, isolamento entre databases, dados grandes
-- **Validação**: Thread-safety, TTL, timeout e cancelamento de contexto
+- **Coverage**: Real LMDB instances with concurrent operations
+- **Scenarios**: Multiple goroutines, database isolation, large data
+- **Validation**: Thread-safety, TTL, timeout and context cancellation
 
-#### 🎯 Property-Based Tests (10 testes)
-- **Arquivo**: `internal/storage/property_test.go`
+#### 🎯 Property-Based Tests (10 tests)
+- **File**: `internal/storage/property_test.go`
 - **Framework**: Ginkgo + Gomega + Gopter
-- **Cobertura**: Invariantes do storage (Set-Get, Set-Delete, TTL, Persist)
-- **Cenários**: 1000 testes por propriedade (100 execuções × 10 propriedades)
-- **Validação**: Isolamento entre databases, idempotência, consistência
+- **Coverage**: Storage invariants (Set-Get, Set-Delete, TTL, Persist)
+- **Scenarios**: 1000 tests per property (100 executions × 10 properties)
+- **Validation**: Database isolation, idempotency, consistency
 
-#### ⚡ Performance Tests (12 testes + benchmarks)
-- **Arquivo**: `internal/storage/performance_test.go`
-- **Framework**: Ginkgo + gmeasure + Benchmarks Go
-- **Cobertura**: Performance individual e em lote, concorrência, throughput
-- **Cenários**: Operações individuais, batch operations, dados grandes
-- **Benchmarks**: Métricas precisas de ns/op para LMDB
+#### ⚡ Performance Tests (12 tests + benchmarks)
+- **File**: `internal/storage/performance_test.go`
+- **Framework**: Ginkgo + gmeasure + Go Benchmarks
+- **Coverage**: Individual and batch performance, concurrency, throughput
+- **Scenarios**: Individual operations, batch operations, large data
+- **Benchmarks**: Precise ns/op metrics for LMDB
 
-### 🔄 Próximos Packages
+### 🔄 Next Packages
 
-- `internal/app` - Planejado  
-- `cmd/keyp` - Planejado
+- `internal/app` - Planned  
+- `cmd/keyp` - Planned
 
-## Arquitetura de Testes
+## Test Architecture
 
-### Isolamento e Paralelização
+### Isolation and Parallelization
 
-#### ✅ Características Implementadas
+#### ✅ Implemented Features
 
-- **Diretórios Únicos**: Cada teste usa diretório temporário único
-- **Limpeza Automática**: Diretórios são removidos após cada teste
-- **Paralelização Segura**: Testes podem rodar em paralelo sem conflitos
-- **Isolamento Total**: Nenhum teste interfere com outro
+- **Unique Directories**: Each test uses a unique temporary directory
+- **Automatic Cleanup**: Directories are removed after each test
+- **Safe Parallelization**: Tests can run in parallel without conflicts
+- **Total Isolation**: No test interferes with another
 
-#### 📁 Padrão de Diretórios
+#### 📁 Directory Pattern
 
 ```
-/tmp/keyp-{tipo}-{pid}-{timestamp}/
+/tmp/keyp-{type}-{pid}-{timestamp}/
 ```
 
-Exemplos:
+Examples:
 - `/tmp/keyp-integration-12345-1766756124000/`
 - `/tmp/keyp-property-12345-1766756125000/`
 - `/tmp/keyp-bench-set-12345-1766756126000/`
 
-#### 🔄 Limpeza Automática
+#### 🔄 Automatic Cleanup
 
-- **BeforeEach**: Cria diretório único
-- **AfterEach**: Remove diretório e fecha storage
-- **Benchmarks**: Usa `defer` para limpeza garantida
+- **BeforeEach**: Creates unique directory
+- **AfterEach**: Removes directory and closes storage
+- **Benchmarks**: Uses `defer` for guaranteed cleanup
 
-## Execução dos Testes
+## Test Execution
 
-### Comandos Principais
+### Main Commands
 
-#### Todos os Testes (Paralelo - Recomendado)
+#### All Tests (Parallel - Recommended)
 ```bash
 # Service package
 ginkgo -p ./internal/service
@@ -117,11 +117,11 @@ ginkgo -p ./internal/service
 # Storage package  
 ginkgo -p ./internal/storage
 
-# Todos os packages
+# All packages
 ginkgo -p ./internal/...
 ```
 
-#### Todos os Testes (Sequencial)
+#### All Tests (Sequential)
 ```bash
 # Service package
 go test ./internal/service -v
@@ -129,11 +129,11 @@ go test ./internal/service -v
 # Storage package
 go test ./internal/storage -v
 
-# Todos os packages
+# All packages
 go test ./internal/... -v
 ```
 
-#### Por Tipo de Teste
+#### By Test Type
 ```bash
 # Unit Tests
 go test ./internal/service -v --ginkgo.label-filter="unit"
@@ -160,180 +160,164 @@ go test ./internal/service -bench=. -run=^$
 # Storage benchmarks
 go test ./internal/storage -bench=. -run=^$
 
-# Benchmark específico
+# Specific benchmark
 go test ./internal/service -bench=BenchmarkHandlerSET -run=^$
 go test ./internal/storage -bench=BenchmarkStorageSet -run=^$
 ```
 
-### Resultados de Performance
+### Performance Results
 
 #### Service Package (Apple M1 Pro)
 
 ```
-BenchmarkHandlerSET-10      865309    1304 ns/op
-BenchmarkHandlerGET-10     1000000    1181 ns/op  
-BenchmarkHandlerDEL-10      409984    3026 ns/op
-BenchmarkHandlerPING-10   19510212      62 ns/op
-BenchmarkHandlerMixed-10    277227    4378 ns/op
+BenchmarkHandlerSET-10      	  917700	      1296 ns/op	     120 B/op	       3 allocs/op
+BenchmarkHandlerGET-10      	  965050	      1212 ns/op	     136 B/op	       4 allocs/op
+BenchmarkHandlerDEL-10      	  390798	      3069 ns/op	     440 B/op	      14 allocs/op
+BenchmarkHandlerPING-10     	19328184	        61.07 ns/op	      56 B/op	       2 allocs/op
+BenchmarkHandlerMixed-10    	  275817	      4372 ns/op	     624 B/op	      20 allocs/op
 ```
 
 #### Storage Package (Apple M1 Pro)
 
 ```
-BenchmarkStorageSet-10     1025377    1142 ns/op
-BenchmarkStorageGet-10     1000000    1096 ns/op
-BenchmarkStorageDel-10      442477    2766 ns/op
-BenchmarkStorageMixed-10    305694    3919 ns/op
+BenchmarkStorageSet-10      	 1015824	      1186 ns/op	      64 B/op	       1 allocs/op
+BenchmarkStorageGet-10      	 1000000	      1112 ns/op	      80 B/op	       2 allocs/op
+BenchmarkStorageDel-10      	  432428	      2842 ns/op	     200 B/op	       5 allocs/op
+BenchmarkStorageMixed-10    	  298111	      4074 ns/op	     311 B/op	       9 allocs/op
 ```
 
-#### Validações de Performance
+#### Performance Validations
 
 **Service Layer:**
-- **SET**: < 1 segundo para 1000 operações
-- **GET**: < 1 segundo para 1000 operações  
-- **PING**: < 0.5 segundos para 10000 operações
-- **Mixed**: < 3 segundos para 1000 operações completas
+- **SET**: < 1 second for 1000 operations
+- **GET**: < 1 second for 1000 operations  
+- **PING**: < 0.5 seconds for 10000 operations
+- **Mixed**: < 3 seconds for 1000 complete operations
 
 **Storage Layer:**
-- **SET**: < 1 segundo para 1000 operações LMDB
-- **GET**: < 1 segundo para 1000 operações LMDB
-- **DEL**: < 3 segundos para 1000 operações LMDB
-- **Mixed**: < 4 segundos para 1000 operações completas
+- **SET**: < 1 second for 1000 LMDB operations
+- **GET**: < 1 second for 1000 LMDB operations
+- **DEL**: < 3 seconds for 1000 LMDB operations
+- **Mixed**: < 4 seconds for 1000 complete operations
 
-#### Paralelização
+#### Parallelization
 
 **Service Package:**
 ```
-Sequencial: 2.8s (37 specs)
-Paralelo:   1.7s (37 specs) - 40% mais rápido
-Processos:  9 paralelos
+Sequential: 4.2s (96 specs)
+Parallel:   2.1s (96 specs) - 50% faster
+Processes:  10 parallel
 ```
 
 **Storage Package:**
 ```
-Sequencial: 7.6s (60 specs)
-Paralelo:   4.2s (60 specs) - 45% mais rápido  
-Processos:  10 paralelos
+Sequential: 7.6s (60 specs)
+Parallel:   4.2s (60 specs) - 45% faster  
+Processes:  10 parallel
 ```
 
-## Padrões de Código nos Testes
+## Code Standards in Tests
 
-### Conformidade com Steering Rules
+### Steering Rules Compliance
 
-Os testes seguem rigorosamente os padrões definidos em `.kiro/steering/code-standards.md`:
+Tests strictly follow the standards defined in `.kiro/steering/code-standards.md`:
 
-- ✅ **Zero comentários** - Nomes descritivos
-- ✅ **Return early** - Sem `if/else`
-- ✅ **Funções extraídas** - `hasError()`, `isEmpty()`
-- ✅ **Receivers descritivos** - `handler`, não `h`
-- ✅ **Commits semânticos** - `test: add comprehensive coverage`
+- ✅ **Zero comments** - Descriptive names
+- ✅ **Return early** - No `if/else`
+- ✅ **Extracted functions** - `hasError()`, `isEmpty()`
+- ✅ **Descriptive receivers** - `handler`, not `h`
+- ✅ **Semantic commits** - `test: add comprehensive coverage`
 
-### Estrutura dos Arquivos
+### File Structure
 
 **Service Package:**
 ```
 internal/service/
-├── service_test.go      # Suite principal + utilitários
-├── mocks_test.go        # Mocks gerados (mockgen)
-├── unit_test.go         # Testes unitários
-├── integration_test.go  # Testes de integração
-├── property_test.go     # Testes baseados em propriedades
-└── performance_test.go  # Testes de performance
+├── service_test.go      # Main suite + utilities
+├── mocks_test.go        # Generated mocks (mockgen)
+├── unit_test.go         # Unit tests
+├── integration_test.go  # Integration tests
+├── property_test.go     # Property-based tests
+└── performance_test.go  # Performance tests
 ```
 
 **Storage Package:**
 ```
 internal/storage/
-├── storage_test.go      # Suite principal + utilitários
-├── unit_test.go         # Testes unitários (26 specs)
-├── integration_test.go  # Testes de integração (12 specs)
-├── property_test.go     # Testes baseados em propriedades (10 specs)
-└── performance_test.go  # Testes de performance (12 specs + benchmarks)
+├── storage_test.go      # Main suite + utilities
+├── unit_test.go         # Unit tests (26 specs)
+├── integration_test.go  # Integration tests (12 specs)
+├── property_test.go     # Property-based tests (10 specs)
+└── performance_test.go  # Performance tests (12 specs + benchmarks)
 ```
 
-### Utilitários Centralizados
+### Centralized Utilities
 
 ```go
 func createUniqueTestDir(prefix string) string
 func cleanupTestDir(dir string)
 ```
 
-## Dependências de Teste
+## Test Dependencies
 
-### Frameworks Principais
+### Main Frameworks
 
-- `github.com/onsi/ginkgo/v2` - Framework de testes BDD
-- `github.com/onsi/gomega` - Matchers para assertions
-- `go.uber.org/mock` - Geração de mocks
+- `github.com/onsi/ginkgo/v2` - BDD testing framework
+- `github.com/onsi/gomega` - Matchers for assertions
+- `go.uber.org/mock` - Mock generation
 - `github.com/leanovate/gopter` - Property-based testing
 
-### Dependências de Integração
+### Integration Dependencies
 
-- `github.com/redis/go-redis/v9` - Cliente Redis
-- `github.com/tidwall/redcon` - Servidor Redis compatível
+- `github.com/redis/go-redis/v9` - Redis client
+- `github.com/tidwall/redcon` - Redis-compatible server
 
-### Geração de Mocks
+### Mock Generation
 
 ```bash
 mockgen -source=internal/domain/types.go -destination=internal/service/mocks_test.go -package=service_test
 ```
 
-## Integração com CI/CD
+## CI/CD Integration
 
-### Comandos Recomendados
+### Recommended Commands
 
 ```bash
-# Verificação rápida - todos os packages
+# Quick check - all packages
 go test ./internal/... -v
 
-# Verificação completa com paralelização
+# Complete check with parallelization
 ginkgo -p ./internal/...
 
-# Benchmarks para métricas
+# Benchmarks for metrics
 go test ./internal/service -bench=. -run=^$ -benchmem
 go test ./internal/storage -bench=. -run=^$ -benchmem
 
-# Por package específico
+# By specific package
 go test ./internal/service -v --ginkgo.v
 go test ./internal/storage -v --ginkgo.v
 ```
 
-### Métricas de Qualidade
+### Quality Metrics
 
 **Service Package:**
-- **Cobertura**: 100% dos comandos principais
-- **Specs**: 37 testes em 4 tipos
-- **Isolamento**: Total entre execuções
-- **Performance**: Benchmarks automatizados
+- **Coverage**: 100% of main commands (25 total commands)
+- **Specs**: 96 tests in 4 types
+- **Isolation**: Total between executions
+- **Performance**: Automated benchmarks
 
 **Storage Package:**
-- **Cobertura**: 100% das operações LMDB
-- **Specs**: 60 testes em 4 tipos
-- **Isolamento**: Total entre execuções
-- **Performance**: Benchmarks automatizados
+- **Coverage**: 100% of LMDB operations
+- **Specs**: 60 tests in 4 types
+- **Isolation**: Total between executions
+- **Performance**: Automated benchmarks
 
-**Total do Projeto:**
-- **Specs**: 97 testes (37 service + 60 storage)
-- **Property Tests**: 1600+ execuções (100 × 16 propriedades)
-- **Benchmarks**: 9 benchmarks diferentes
-- **Cobertura**: 2 packages completos
-
-## Roadmap de Testes
-
-### Próximas Implementações
-
-1. **`internal/app`** - Testes de servidor e configuração
-2. **`cmd/keyp`** - Testes de CLI e inicialização
-3. **End-to-End** - Testes completos do sistema
-
-### Melhorias Futuras
-
-- **Cobertura de código** automatizada
-- **Testes de carga** com múltiplos clientes
-- **Testes de falha** e recuperação
-- **Profiling** automatizado
-- **Testes de TTL** com expiração real (storage)
+**Project Total:**
+- **Specs**: 156 tests (96 service + 60 storage)
+- **Property Tests**: 1600+ executions (100 × 16 properties)
+- **Benchmarks**: 9 different benchmarks
+- **Coverage**: 2 complete packages
 
 ---
 
-> **Próximos Passos**: Consulte [ARCHITECTURE.md](ARCHITECTURE.md) para entender a estrutura do sistema e [README.md](README.md) para instruções de uso.
+> **Next Steps**: See [ARCHITECTURE.md](ARCHITECTURE.md) to understand the system structure and [README.md](README.md) for usage instructions.
