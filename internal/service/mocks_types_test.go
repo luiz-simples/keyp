@@ -99,6 +99,20 @@ func (mr *MockPersisterMockRecorder) Expire(arg0, arg1, arg2 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Expire", reflect.TypeOf((*MockPersister)(nil).Expire), arg0, arg1, arg2)
 }
 
+// FlushAll mocks base method.
+func (m *MockPersister) FlushAll(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FlushAll", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FlushAll indicates an expected call of FlushAll.
+func (mr *MockPersisterMockRecorder) FlushAll(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FlushAll", reflect.TypeOf((*MockPersister)(nil).FlushAll), arg0)
+}
+
 // Get mocks base method.
 func (m *MockPersister) Get(arg0 context.Context, arg1 []byte) ([]byte, error) {
 	m.ctrl.T.Helper()
@@ -250,6 +264,73 @@ func (mr *MockPersisterMockRecorder) RPush(arg0, arg1 any, arg2 ...any) *gomock.
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RPush", reflect.TypeOf((*MockPersister)(nil).RPush), varargs...)
+}
+
+// SAdd mocks base method.
+func (m *MockPersister) SAdd(arg0 context.Context, arg1 []byte, arg2 ...[]byte) int64 {
+	m.ctrl.T.Helper()
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SAdd", varargs...)
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// SAdd indicates an expected call of SAdd.
+func (mr *MockPersisterMockRecorder) SAdd(arg0, arg1 any, arg2 ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SAdd", reflect.TypeOf((*MockPersister)(nil).SAdd), varargs...)
+}
+
+// SIsMember mocks base method.
+func (m *MockPersister) SIsMember(arg0 context.Context, arg1, arg2 []byte) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SIsMember", arg0, arg1, arg2)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// SIsMember indicates an expected call of SIsMember.
+func (mr *MockPersisterMockRecorder) SIsMember(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SIsMember", reflect.TypeOf((*MockPersister)(nil).SIsMember), arg0, arg1, arg2)
+}
+
+// SMembers mocks base method.
+func (m *MockPersister) SMembers(arg0 context.Context, arg1 []byte) ([][]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SMembers", arg0, arg1)
+	ret0, _ := ret[0].([][]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SMembers indicates an expected call of SMembers.
+func (mr *MockPersisterMockRecorder) SMembers(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SMembers", reflect.TypeOf((*MockPersister)(nil).SMembers), arg0, arg1)
+}
+
+// SRem mocks base method.
+func (m *MockPersister) SRem(arg0 context.Context, arg1 []byte, arg2 ...[]byte) int64 {
+	m.ctrl.T.Helper()
+	varargs := []any{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SRem", varargs...)
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// SRem indicates an expected call of SRem.
+func (mr *MockPersisterMockRecorder) SRem(arg0, arg1 any, arg2 ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SRem", reflect.TypeOf((*MockPersister)(nil).SRem), varargs...)
 }
 
 // Set mocks base method.

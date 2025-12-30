@@ -55,6 +55,12 @@ func NewHandler(storage domain.Persister) *Handler {
 		"RPOP":   handler.rpop,
 		"LRANGE": handler.lrange,
 
+		"FLUSHALL":  handler.flushall,
+		"SADD":      handler.sadd,
+		"SREM":      handler.srem,
+		"SMEMBERS":  handler.smembers,
+		"SISMEMBER": handler.sismember,
+
 		"PING":   ping,
 		"DELETE": handler.del,
 	}
@@ -78,6 +84,12 @@ func NewHandler(storage domain.Persister) *Handler {
 		"LPOP":   {MinArgs: 2, MaxArgs: 2},
 		"RPOP":   {MinArgs: 2, MaxArgs: 2},
 		"LRANGE": {MinArgs: 4, MaxArgs: 4},
+
+		"FLUSHALL":  {MinArgs: 1, MaxArgs: 1},
+		"SADD":      {MinArgs: 3, MaxArgs: -1},
+		"SREM":      {MinArgs: 3, MaxArgs: -1},
+		"SMEMBERS":  {MinArgs: 2, MaxArgs: 2},
+		"SISMEMBER": {MinArgs: 3, MaxArgs: 3},
 
 		"PING":   {MinArgs: 1, MaxArgs: 2},
 		"DELETE": {MinArgs: 2, MaxArgs: -1},

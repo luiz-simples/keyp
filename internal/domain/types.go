@@ -32,6 +32,12 @@ type (
 		RPop(context.Context, []byte) ([]byte, error)
 		LRange(context.Context, []byte, int64, int64) ([][]byte, error)
 
+		FlushAll(context.Context) error
+		SAdd(context.Context, []byte, ...[]byte) int64
+		SRem(context.Context, []byte, ...[]byte) int64
+		SMembers(context.Context, []byte) ([][]byte, error)
+		SIsMember(context.Context, []byte, []byte) bool
+
 		Close()
 	}
 

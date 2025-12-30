@@ -73,6 +73,15 @@ Keyp implements Redis-compatible commands for string and list operations:
 - `LRANGE key start stop` - Get range of elements
 - `LSET key index value` - Set element at index
 
+#### Set Operations
+- `SADD key member [member ...]` - Add members to set
+- `SREM key member [member ...]` - Remove members from set
+- `SMEMBERS key` - Get all set members
+- `SISMEMBER key member` - Check if member exists in set
+
+#### Database Operations
+- `FLUSHALL` - Remove all keys from database
+
 ### Installation
 
 ```bash

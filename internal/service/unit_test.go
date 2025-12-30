@@ -898,4 +898,233 @@ var _ = Describe("Handler Unit Tests", func() {
 			})
 		})
 	})
+
+	Describe("FLUSHALL Command", func() {
+		Context("when flushing all keys", func() {
+			It("should clear all data", func() {
+				args := [][]byte{[]byte("FLUSHALL")}
+
+				mockPersister.EXPECT().
+					FlushAll(gomock.Any()).
+					Return(nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+				Expect(results[0].Response).To(Equal([]byte("OK")))
+			})
+
+			It("should return error when flush fails", func() {
+				args := [][]byte{[]byte("FLUSHALL")}
+				expectedError := errors.New("flush failed")
+
+				mockPersister.EXPECT().
+					FlushAll(gomock.Any()).
+					Return(expectedError)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(expectedError))
+			})
+		})
+	})
+
+	Describe("SADD Command", func() {
+		Context("when adding members to set", func() {
+			It("should add single member", func() {
+				key := []byte("set-key")
+				member := []byte("member1")
+				args := [][]byte{[]byte("SADD"), key, member}
+				expectedCount := int64(1)
+
+				mockPersister.EXPECT().
+					SAdd(gomock.Any(), key, member).
+					Return(expectedCount)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedCount))
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should add multiple members", func() {
+				key := []byte("set-key")
+				member1 := []byte("member1")
+				member2 := []byte("member2")
+				args := [][]byte{[]byte("SADD"), key, member1, member2}
+				expectedCount := int64(2)
+
+				mockPersister.EXPECT().
+					SAdd(gomock.Any(), key, member1, member2).
+					Return(expectedCount)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedCount))
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
+
+	Describe("SREM Command", func() {
+		Context("when removing members from set", func() {
+			It("should remove existing member", func() {
+				key := []byte("set-key")
+				member := []byte("member1")
+				args := [][]byte{[]byte("SREM"), key, member}
+				expectedCount := int64(1)
+
+				mockPersister.EXPECT().
+					SRem(gomock.Any(), key, member).
+					Return(expectedCount)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedCount))
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return 0 for non-existing member", func() {
+				key := []byte("set-key")
+				member := []byte("non-member")
+				args := [][]byte{[]byte("SREM"), key, member}
+
+				mockPersister.EXPECT().
+					SRem(gomock.Any(), key, member).
+					Return(int64(0))
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 0)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
+
+	Describe("SMEMBERS Command", func() {
+		Context("when getting all set members", func() {
+			It("should return all members", func() {
+				key := []byte("set-key")
+				args := [][]byte{[]byte("SMEMBERS"), key}
+				expectedMembers := [][]byte{
+					[]byte("member1"),
+					[]byte("member2"),
+					[]byte("member3"),
+				}
+
+				mockPersister.EXPECT().
+					SMembers(gomock.Any(), key).
+					Return(expectedMembers, nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(len(expectedMembers)))
+
+				for _, member := range expectedMembers {
+					expectedResponse = append(expectedResponse, make([]byte, 4)...)
+					binary.LittleEndian.PutUint32(expectedResponse[len(expectedResponse)-4:], uint32(len(member)))
+					expectedResponse = append(expectedResponse, member...)
+				}
+
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return empty response for non-existing set", func() {
+				key := []byte("non-set")
+				args := [][]byte{[]byte("SMEMBERS"), key}
+
+				mockPersister.EXPECT().
+					SMembers(gomock.Any(), key).
+					Return([][]byte{}, nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 0)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return error when operation fails", func() {
+				key := []byte("set-key")
+				args := [][]byte{[]byte("SMEMBERS"), key}
+				expectedError := errors.New("operation failed")
+
+				mockPersister.EXPECT().
+					SMembers(gomock.Any(), key).
+					Return(nil, expectedError)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(expectedError))
+			})
+		})
+	})
+
+	Describe("SISMEMBER Command", func() {
+		Context("when checking set membership", func() {
+			It("should return 1 for existing member", func() {
+				key := []byte("set-key")
+				member := []byte("member1")
+				args := [][]byte{[]byte("SISMEMBER"), key, member}
+
+				mockPersister.EXPECT().
+					SIsMember(gomock.Any(), key, member).
+					Return(true)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 4)
+				binary.LittleEndian.PutUint32(expectedResponse, 1)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return 0 for non-existing member", func() {
+				key := []byte("set-key")
+				member := []byte("non-member")
+				args := [][]byte{[]byte("SISMEMBER"), key, member}
+
+				mockPersister.EXPECT().
+					SIsMember(gomock.Any(), key, member).
+					Return(false)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 4)
+				binary.LittleEndian.PutUint32(expectedResponse, 0)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
 })

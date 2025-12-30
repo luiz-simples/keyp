@@ -10,6 +10,7 @@ import (
 
 const (
 	listHeaderSize = 8
+	setHeaderSize  = 8
 	itemLengthSize = 4
 )
 
@@ -53,6 +54,10 @@ func isNotFound(err error) bool {
 
 func hasValidListHeader(data []byte) bool {
 	return len(data) >= listHeaderSize
+}
+
+func hasValidSetHeader(data []byte) bool {
+	return len(data) >= setHeaderSize
 }
 
 func isNegativeIndex(index int64) bool {
