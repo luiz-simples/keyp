@@ -1,56 +1,32 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
+	"log"
 
-	"github.com/luiz-simples/keyp.git/internal/logger"
-	"github.com/luiz-simples/keyp.git/internal/server"
+	"github.com/luiz-simples/keyp.git/internal/app"
+	"github.com/luiz-simples/keyp.git/internal/service"
+	"github.com/luiz-simples/keyp.git/internal/storage"
 )
-
-const (
-	defaultPort      = "6380"
-	defaultHost      = "localhost"
-	defaultDataDir   = "./data"
-	signalBufferSize = 1
-	successExitCode  = 0
-)
-
-func hasError(err error) bool {
-	return err != nil
-}
 
 func main() {
-	var (
-		port    = flag.String("port", defaultPort, "Port to listen on")
-		host    = flag.String("host", defaultHost, "Host to bind to")
-		dataDir = flag.String("data-dir", defaultDataDir, "Data directory for LMDB")
-	)
-	flag.Parse()
-
-	addr := fmt.Sprintf("%s:%s", *host, *port)
-
-	srv, err := server.New(addr, *dataDir)
-	if hasError(err) {
-		logger.Fatal("Failed to create server", "error", err)
+	config := app.Config{
+		Address: "0.0.0.0:6379",
+		DataDir: "./data",
 	}
 
-	c := make(chan os.Signal, signalBufferSize)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	lmdb, err := storage.NewClient(config.DataDir)
 
-	go func() {
-		<-c
-		logger.Info("Shutting down server...")
-		srv.Close()
-		os.Exit(successExitCode)
-	}()
-
-	logger.Info("Keyp server starting", "addr", addr)
-
-	if err := srv.ListenAndServe(); hasError(err) {
-		logger.Fatal("Server error", "error", err)
+	if noError(err) {
+		poolService := service.NewPool(lmdb)
+		server := app.NewServer(poolService)
+		err = server.Start(config)
 	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func noError(err error) bool {
+	return err == nil
 }

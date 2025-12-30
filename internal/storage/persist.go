@@ -6,23 +6,23 @@ import (
 	"github.com/luiz-simples/keyp.git/internal/domain"
 )
 
-func (client *Client) TTL(ctx context.Context, keyBytes []byte) uint32 {
-	client.mtx.RLock()
-	defer client.mtx.RUnlock()
+func (client *Client) Persist(ctx context.Context, keyBytes []byte) {
+	client.mtx.Lock()
+	defer client.mtx.Unlock()
 
 	db, _ := ctx.Value(domain.DB).(uint8)
 	key := string(keyBytes)
 	keys, hasKeys := client.ttl[db]
 
 	if !hasKeys {
-		return 0
+		return
 	}
 
 	ttl := keys[key]
 
-	if ttl == nil {
-		return 0
+	if ttl != nil {
+		ttl.Cancel()
 	}
 
-	return ttl.Expire
+	delete(keys, key)
 }

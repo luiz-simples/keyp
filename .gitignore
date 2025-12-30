@@ -61,3 +61,4 @@ temp/
 *.html
 .kiro/
 benchmarks/results/
+FUTURE.md
