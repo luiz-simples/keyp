@@ -15,21 +15,21 @@ Implementação completa de 4 tipos de testes com isolamento total e paraleliza�
 #### 🧪 Unit Tests
 - **Arquivo**: `internal/service/unit_test.go`
 - **Framework**: Ginkgo + Gomega + GoMock
-- **Cobertura**: Comandos básicos (PING, SET, GET, DEL), comandos de lista (EXISTS, LINDEX, LLEN, LPOP, LPUSH, LRANGE, LSET, RPOP, RPUSH) e comandos de set (FLUSHALL, SADD, SREM, SMEMBERS, SISMEMBER)
+- **Cobertura**: Comandos básicos (PING, SET, GET, DEL), comandos de lista (EXISTS, LINDEX, LLEN, LPOP, LPUSH, LRANGE, LSET, RPOP, RPUSH), comandos de set (FLUSHALL, SADD, SREM, SMEMBERS, SISMEMBER), comandos de sorted set (ZADD, ZRANGE, ZCOUNT), comandos numéricos (INCR, INCRBY, DECR, DECRBY) e comando de string (APPEND)
 - **Cenários**: Sucesso, erro, contexto cancelado, validação, operações de lista
 - **Mocks**: Gerados com `mockgen` para `domain.Persister`
 
 #### 🔗 Integration Tests  
 - **Arquivo**: `internal/service/integration_test.go`
 - **Framework**: Ginkgo + Gomega + go-redis
-- **Cobertura**: Servidor Redis real com cliente go-redis, comandos básicos, de lista e de set
+- **Cobertura**: Servidor Redis real com cliente go-redis, comandos básicos, de lista, de set, de sorted set, numéricos e de string
 - **Cenários**: Operações básicas, operações de lista, concorrência, valores grandes
 - **Protocolo**: Compatibilidade completa com Redis
 
 #### 🎯 Property-Based Tests
 - **Arquivo**: `internal/service/property_test.go` 
 - **Framework**: Ginkgo + Gomega + Gopter
-- **Cobertura**: Propriedades fundamentais (SET-GET, DEL, EXISTS), operações de lista e operações de set
+- **Cobertura**: Propriedades fundamentais (SET-GET, DEL, EXISTS), operações de lista, operações de set, operações de sorted set e operações numéricas
 - **Cenários**: 100 testes por propriedade com dados aleatórios
 - **Validação**: Invariantes e comportamentos esperados para strings e listas
 

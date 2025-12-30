@@ -9,15 +9,20 @@ import (
 )
 
 const (
-	listHeaderSize = 8
-	setHeaderSize  = 8
-	itemLengthSize = 4
+	listHeaderSize      = 8
+	setHeaderSize       = 8
+	sortedSetHeaderSize = 8
+	itemLengthSize      = 4
+	scoreSize           = 8
 
 	integerSize = 8
 
 	firstElement = 0
 	emptyCount   = 0
 	singleItem   = 1
+
+	defaultIncrement = 1
+	defaultDecrement = -1
 )
 
 func hasError(err error) bool {
@@ -64,6 +69,14 @@ func hasValidListHeader(data []byte) bool {
 
 func hasValidSetHeader(data []byte) bool {
 	return len(data) >= setHeaderSize
+}
+
+func hasValidSortedSetHeader(data []byte) bool {
+	return len(data) >= sortedSetHeaderSize
+}
+
+func isScoreInRange(score, min, max float64) bool {
+	return score >= min && score <= max
 }
 
 func isNegativeIndex(index int64) bool {

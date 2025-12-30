@@ -9,7 +9,9 @@ import (
 )
 
 var (
-	ErrKeyNotFound = errors.New("key not found")
+	ErrKeyNotFound     = errors.New("key not found")
+	ErrNotInteger      = errors.New("value is not an integer or out of range")
+	ErrContextCanceled = errors.New("context canceled")
 )
 
 const (

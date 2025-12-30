@@ -41,6 +41,20 @@ func (m *MockPersister) EXPECT() *MockPersisterMockRecorder {
 	return m.recorder
 }
 
+// Append mocks base method.
+func (m *MockPersister) Append(arg0 context.Context, arg1, arg2 []byte) int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Append", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// Append indicates an expected call of Append.
+func (mr *MockPersisterMockRecorder) Append(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Append", reflect.TypeOf((*MockPersister)(nil).Append), arg0, arg1, arg2)
+}
+
 // Close mocks base method.
 func (m *MockPersister) Close() {
 	m.ctrl.T.Helper()
@@ -51,6 +65,36 @@ func (m *MockPersister) Close() {
 func (mr *MockPersisterMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockPersister)(nil).Close))
+}
+
+// Decr mocks base method.
+func (m *MockPersister) Decr(arg0 context.Context, arg1 []byte) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Decr", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Decr indicates an expected call of Decr.
+func (mr *MockPersisterMockRecorder) Decr(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Decr", reflect.TypeOf((*MockPersister)(nil).Decr), arg0, arg1)
+}
+
+// DecrBy mocks base method.
+func (m *MockPersister) DecrBy(arg0 context.Context, arg1 []byte, arg2 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DecrBy", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DecrBy indicates an expected call of DecrBy.
+func (mr *MockPersisterMockRecorder) DecrBy(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecrBy", reflect.TypeOf((*MockPersister)(nil).DecrBy), arg0, arg1, arg2)
 }
 
 // Del mocks base method.
@@ -126,6 +170,36 @@ func (m *MockPersister) Get(arg0 context.Context, arg1 []byte) ([]byte, error) {
 func (mr *MockPersisterMockRecorder) Get(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPersister)(nil).Get), arg0, arg1)
+}
+
+// Incr mocks base method.
+func (m *MockPersister) Incr(arg0 context.Context, arg1 []byte) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Incr", arg0, arg1)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Incr indicates an expected call of Incr.
+func (mr *MockPersisterMockRecorder) Incr(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Incr", reflect.TypeOf((*MockPersister)(nil).Incr), arg0, arg1)
+}
+
+// IncrBy mocks base method.
+func (m *MockPersister) IncrBy(arg0 context.Context, arg1 []byte, arg2 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IncrBy", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IncrBy indicates an expected call of IncrBy.
+func (mr *MockPersisterMockRecorder) IncrBy(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncrBy", reflect.TypeOf((*MockPersister)(nil).IncrBy), arg0, arg1, arg2)
 }
 
 // LIndex mocks base method.
@@ -359,6 +433,49 @@ func (m *MockPersister) TTL(arg0 context.Context, arg1 []byte) uint32 {
 func (mr *MockPersisterMockRecorder) TTL(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TTL", reflect.TypeOf((*MockPersister)(nil).TTL), arg0, arg1)
+}
+
+// ZAdd mocks base method.
+func (m *MockPersister) ZAdd(arg0 context.Context, arg1 []byte, arg2 float64, arg3 []byte) int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ZAdd", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// ZAdd indicates an expected call of ZAdd.
+func (mr *MockPersisterMockRecorder) ZAdd(arg0, arg1, arg2, arg3 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ZAdd", reflect.TypeOf((*MockPersister)(nil).ZAdd), arg0, arg1, arg2, arg3)
+}
+
+// ZCount mocks base method.
+func (m *MockPersister) ZCount(arg0 context.Context, arg1 []byte, arg2, arg3 float64) int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ZCount", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// ZCount indicates an expected call of ZCount.
+func (mr *MockPersisterMockRecorder) ZCount(arg0, arg1, arg2, arg3 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ZCount", reflect.TypeOf((*MockPersister)(nil).ZCount), arg0, arg1, arg2, arg3)
+}
+
+// ZRange mocks base method.
+func (m *MockPersister) ZRange(arg0 context.Context, arg1 []byte, arg2, arg3 int64) ([][]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ZRange", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([][]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ZRange indicates an expected call of ZRange.
+func (mr *MockPersisterMockRecorder) ZRange(arg0, arg1, arg2, arg3 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ZRange", reflect.TypeOf((*MockPersister)(nil).ZRange), arg0, arg1, arg2, arg3)
 }
 
 // MockDispatcher is a mock of Dispatcher interface.

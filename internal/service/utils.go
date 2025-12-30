@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"strings"
 
@@ -13,6 +14,9 @@ var (
 	QUEUED []byte = []byte("QUEUED")
 
 	EMPTY error = errors.New("ERR empty command")
+
+	ErrInvalidInteger = errors.New("ERR value is not an integer or out of range")
+	ErrInvalidFloat   = errors.New("ERR value is not a valid float")
 )
 
 const (
@@ -61,4 +65,23 @@ func isValid(validation *domain.Validation, cmdName string, argCount int) error 
 	}
 
 	return nil
+}
+
+func encodeArray(items [][]byte) []byte {
+	if len(items) == 0 {
+		response := make([]byte, 8)
+		binary.LittleEndian.PutUint64(response, 0)
+		return response
+	}
+
+	response := make([]byte, 8)
+	binary.LittleEndian.PutUint64(response, uint64(len(items)))
+
+	for _, item := range items {
+		response = append(response, make([]byte, 4)...)
+		binary.LittleEndian.PutUint32(response[len(response)-4:], uint32(len(item)))
+		response = append(response, item...)
+	}
+
+	return response
 }

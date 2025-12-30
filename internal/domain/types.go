@@ -38,6 +38,17 @@ type (
 		SMembers(context.Context, []byte) ([][]byte, error)
 		SIsMember(context.Context, []byte, []byte) bool
 
+		ZAdd(context.Context, []byte, float64, []byte) int64
+		ZRange(context.Context, []byte, int64, int64) ([][]byte, error)
+		ZCount(context.Context, []byte, float64, float64) int64
+
+		Incr(context.Context, []byte) (int64, error)
+		IncrBy(context.Context, []byte, int64) (int64, error)
+		Decr(context.Context, []byte) (int64, error)
+		DecrBy(context.Context, []byte, int64) (int64, error)
+
+		Append(context.Context, []byte, []byte) int64
+
 		Close()
 	}
 

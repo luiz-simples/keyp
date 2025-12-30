@@ -1127,4 +1127,289 @@ var _ = Describe("Handler Unit Tests", func() {
 			})
 		})
 	})
+
+	Describe("ZADD Command", func() {
+		Context("when adding member to sorted set", func() {
+			It("should return 1 for new member", func() {
+				key := []byte("zset-key")
+				score := []byte("1.5")
+				member := []byte("member1")
+				args := [][]byte{[]byte("ZADD"), key, score, member}
+
+				mockPersister.EXPECT().
+					ZAdd(gomock.Any(), key, 1.5, member).
+					Return(int64(1))
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 1)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return error for invalid score", func() {
+				key := []byte("zset-key")
+				score := []byte("invalid")
+				member := []byte("member1")
+				args := [][]byte{[]byte("ZADD"), key, score, member}
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(service.ErrInvalidFloat))
+			})
+		})
+	})
+
+	Describe("ZRANGE Command", func() {
+		Context("when getting range from sorted set", func() {
+			It("should return members in range", func() {
+				key := []byte("zset-key")
+				start := []byte("0")
+				stop := []byte("2")
+				args := [][]byte{[]byte("ZRANGE"), key, start, stop}
+				expectedMembers := [][]byte{
+					[]byte("member1"),
+					[]byte("member2"),
+					[]byte("member3"),
+				}
+
+				mockPersister.EXPECT().
+					ZRange(gomock.Any(), key, int64(0), int64(2)).
+					Return(expectedMembers, nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(len(expectedMembers)))
+
+				for _, member := range expectedMembers {
+					expectedResponse = append(expectedResponse, make([]byte, 4)...)
+					binary.LittleEndian.PutUint32(expectedResponse[len(expectedResponse)-4:], uint32(len(member)))
+					expectedResponse = append(expectedResponse, member...)
+				}
+
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return error for invalid start index", func() {
+				key := []byte("zset-key")
+				start := []byte("invalid")
+				stop := []byte("2")
+				args := [][]byte{[]byte("ZRANGE"), key, start, stop}
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(service.ErrInvalidInteger))
+			})
+		})
+	})
+
+	Describe("ZCOUNT Command", func() {
+		Context("when counting members in score range", func() {
+			It("should return count of members", func() {
+				key := []byte("zset-key")
+				min := []byte("1.0")
+				max := []byte("3.0")
+				args := [][]byte{[]byte("ZCOUNT"), key, min, max}
+
+				mockPersister.EXPECT().
+					ZCount(gomock.Any(), key, 1.0, 3.0).
+					Return(int64(5))
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 5)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return error for invalid min score", func() {
+				key := []byte("zset-key")
+				min := []byte("invalid")
+				max := []byte("3.0")
+				args := [][]byte{[]byte("ZCOUNT"), key, min, max}
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(service.ErrInvalidFloat))
+			})
+		})
+	})
+
+	Describe("INCR Command", func() {
+		Context("when incrementing key", func() {
+			It("should return incremented value", func() {
+				key := []byte("counter")
+				args := [][]byte{[]byte("INCR"), key}
+
+				mockPersister.EXPECT().
+					Incr(gomock.Any(), key).
+					Return(int64(1), nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 1)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return error when operation fails", func() {
+				key := []byte("counter")
+				args := [][]byte{[]byte("INCR"), key}
+				expectedError := errors.New("not integer")
+
+				mockPersister.EXPECT().
+					Incr(gomock.Any(), key).
+					Return(int64(0), expectedError)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(expectedError))
+			})
+		})
+	})
+
+	Describe("INCRBY Command", func() {
+		Context("when incrementing key by value", func() {
+			It("should return incremented value", func() {
+				key := []byte("counter")
+				increment := []byte("5")
+				args := [][]byte{[]byte("INCRBY"), key, increment}
+
+				mockPersister.EXPECT().
+					IncrBy(gomock.Any(), key, int64(5)).
+					Return(int64(15), nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 15)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return error for invalid increment", func() {
+				key := []byte("counter")
+				increment := []byte("invalid")
+				args := [][]byte{[]byte("INCRBY"), key, increment}
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(service.ErrInvalidInteger))
+			})
+		})
+	})
+
+	Describe("DECR Command", func() {
+		Context("when decrementing key", func() {
+			It("should return decremented value", func() {
+				key := []byte("counter")
+				args := [][]byte{[]byte("DECR"), key}
+
+				mockPersister.EXPECT().
+					Decr(gomock.Any(), key).
+					Return(int64(-1), nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, ^uint64(0))
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return error when operation fails", func() {
+				key := []byte("counter")
+				args := [][]byte{[]byte("DECR"), key}
+				expectedError := errors.New("not integer")
+
+				mockPersister.EXPECT().
+					Decr(gomock.Any(), key).
+					Return(int64(0), expectedError)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(expectedError))
+			})
+		})
+	})
+
+	Describe("DECRBY Command", func() {
+		Context("when decrementing key by value", func() {
+			It("should return decremented value", func() {
+				key := []byte("counter")
+				decrement := []byte("3")
+				args := [][]byte{[]byte("DECRBY"), key, decrement}
+
+				mockPersister.EXPECT().
+					DecrBy(gomock.Any(), key, int64(3)).
+					Return(int64(7), nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 7)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return error for invalid decrement", func() {
+				key := []byte("counter")
+				decrement := []byte("invalid")
+				args := [][]byte{[]byte("DECRBY"), key, decrement}
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(service.ErrInvalidInteger))
+			})
+		})
+	})
+
+	Describe("APPEND Command", func() {
+		Context("when appending to key", func() {
+			It("should return new length", func() {
+				key := []byte("string-key")
+				value := []byte("world")
+				args := [][]byte{[]byte("APPEND"), key, value}
+
+				mockPersister.EXPECT().
+					Append(gomock.Any(), key, value).
+					Return(int64(10))
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 10)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
 })

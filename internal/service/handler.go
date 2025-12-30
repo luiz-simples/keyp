@@ -61,6 +61,17 @@ func NewHandler(storage domain.Persister) *Handler {
 		"SMEMBERS":  handler.smembers,
 		"SISMEMBER": handler.sismember,
 
+		"ZADD":   handler.zadd,
+		"ZRANGE": handler.zrange,
+		"ZCOUNT": handler.zcount,
+
+		"INCR":   handler.incr,
+		"INCRBY": handler.incrby,
+		"DECR":   handler.decr,
+		"DECRBY": handler.decrby,
+
+		"APPEND": handler.append,
+
 		"PING":   ping,
 		"DELETE": handler.del,
 	}
@@ -90,6 +101,17 @@ func NewHandler(storage domain.Persister) *Handler {
 		"SREM":      {MinArgs: 3, MaxArgs: -1},
 		"SMEMBERS":  {MinArgs: 2, MaxArgs: 2},
 		"SISMEMBER": {MinArgs: 3, MaxArgs: 3},
+
+		"ZADD":   {MinArgs: 4, MaxArgs: 4},
+		"ZRANGE": {MinArgs: 4, MaxArgs: 4},
+		"ZCOUNT": {MinArgs: 4, MaxArgs: 4},
+
+		"INCR":   {MinArgs: 2, MaxArgs: 2},
+		"INCRBY": {MinArgs: 3, MaxArgs: 3},
+		"DECR":   {MinArgs: 2, MaxArgs: 2},
+		"DECRBY": {MinArgs: 3, MaxArgs: 3},
+
+		"APPEND": {MinArgs: 3, MaxArgs: 3},
 
 		"PING":   {MinArgs: 1, MaxArgs: 2},
 		"DELETE": {MinArgs: 2, MaxArgs: -1},

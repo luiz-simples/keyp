@@ -61,7 +61,14 @@ Keyp implements Redis-compatible commands for string and list operations:
 - `GET key` - Get value by key
 - `DEL key [key ...]` - Delete one or more keys
 - `EXISTS key` - Check if key exists
+- `APPEND key value` - Append value to key
 - `PING` - Test server connectivity
+
+#### Numeric Operations
+- `INCR key` - Increment key by 1
+- `INCRBY key increment` - Increment key by increment
+- `DECR key` - Decrement key by 1
+- `DECRBY key decrement` - Decrement key by decrement
 
 #### List Operations
 - `LPUSH key value [value ...]` - Push values to the left of list
@@ -78,6 +85,11 @@ Keyp implements Redis-compatible commands for string and list operations:
 - `SREM key member [member ...]` - Remove members from set
 - `SMEMBERS key` - Get all set members
 - `SISMEMBER key member` - Check if member exists in set
+
+#### Sorted Set Operations
+- `ZADD key score member` - Add member with score to sorted set
+- `ZRANGE key start stop` - Get range of members by rank
+- `ZCOUNT key min max` - Count members in score range
 
 #### Database Operations
 - `FLUSHALL` - Remove all keys from database
