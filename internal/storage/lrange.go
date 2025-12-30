@@ -29,41 +29,41 @@ func (client *Client) LRange(ctx context.Context, key []byte, start, stop int64)
 			return nil
 		}
 
-		if len(data) < 8 {
+		if len(data) < integerSize {
 			return nil
 		}
 
-		length := int64(binary.LittleEndian.Uint64(data[:8]))
-		if length == 0 {
+		length := int64(binary.LittleEndian.Uint64(data[:integerSize]))
+		if length == emptyCount {
 			return nil
 		}
 
-		if start < 0 {
+		if start < firstElement {
 			start = length + start
 		}
-		if stop < 0 {
+		if stop < firstElement {
 			stop = length + stop
 		}
 
-		if start < 0 {
-			start = 0
+		if start < firstElement {
+			start = firstElement
 		}
 		if stop >= length {
-			stop = length - 1
+			stop = length - singleItem
 		}
 
 		if start > stop {
 			return nil
 		}
 
-		offset := 8
-		for i := int64(0); i < length; i++ {
-			if offset+4 > len(data) {
+		offset := integerSize
+		for i := int64(firstElement); i < length; i++ {
+			if offset+itemLengthSize > len(data) {
 				return ErrKeyNotFound
 			}
 
 			itemLen := int(binary.LittleEndian.Uint32(data[offset:]))
-			offset += 4
+			offset += itemLengthSize
 
 			if i >= start && i <= stop {
 				if offset+itemLen > len(data) {

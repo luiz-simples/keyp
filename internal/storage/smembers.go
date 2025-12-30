@@ -36,7 +36,7 @@ func (client *Client) SMembers(ctx context.Context, key []byte) ([][]byte, error
 		count := int64(binary.LittleEndian.Uint64(data[:setHeaderSize]))
 		offset := setHeaderSize
 
-		for i := int64(0); i < count; i++ {
+		for i := int64(firstElement); i < count; i++ {
 			if offset+itemLengthSize > len(data) {
 				return ErrKeyNotFound
 			}

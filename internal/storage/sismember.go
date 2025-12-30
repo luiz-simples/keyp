@@ -37,7 +37,7 @@ func (client *Client) SIsMember(ctx context.Context, key []byte, member []byte) 
 		offset := setHeaderSize
 		memberStr := string(member)
 
-		for i := int64(0); i < count; i++ {
+		for i := int64(firstElement); i < count; i++ {
 			if offset+itemLengthSize > len(data) {
 				return nil
 			}

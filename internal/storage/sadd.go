@@ -9,16 +9,16 @@ import (
 
 func (client *Client) SAdd(ctx context.Context, key []byte, members ...[]byte) int64 {
 	if hasError(ctxFlush(ctx)) {
-		return 0
+		return emptyCount
 	}
 
 	if isEmpty(key) || isEmpty(members) {
-		return 0
+		return emptyCount
 	}
 
 	db, err := client.sel(ctx)
 	if hasError(err) {
-		return 0
+		return emptyCount
 	}
 
 	var addedCount int64
@@ -32,7 +32,7 @@ func (client *Client) SAdd(ctx context.Context, key []byte, members ...[]byte) i
 			count := int64(binary.LittleEndian.Uint64(data[:setHeaderSize]))
 			offset := setHeaderSize
 
-			for i := int64(0); i < count; i++ {
+			for i := int64(firstElement); i < count; i++ {
 				if offset+itemLengthSize > len(data) {
 					break
 				}
@@ -74,7 +74,7 @@ func (client *Client) SAdd(ctx context.Context, key []byte, members ...[]byte) i
 	})
 
 	if hasError(err) {
-		return 0
+		return emptyCount
 	}
 
 	return addedCount

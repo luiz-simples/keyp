@@ -31,44 +31,44 @@ func (client *Client) LPop(ctx context.Context, key []byte) ([]byte, error) {
 			return ErrKeyNotFound
 		}
 
-		if len(data) < 8 {
+		if len(data) < integerSize {
 			return ErrKeyNotFound
 		}
 
-		length := int64(binary.LittleEndian.Uint64(data[:8]))
+		length := int64(binary.LittleEndian.Uint64(data[:integerSize]))
 
-		if length == 0 {
+		if length == emptyCount {
 			return ErrKeyNotFound
 		}
 
-		if length == 1 {
-			if len(data) < 12 {
+		if length == singleItem {
+			if len(data) < integerSize+itemLengthSize {
 				return ErrKeyNotFound
 			}
-			itemLen := int(binary.LittleEndian.Uint32(data[8:12]))
-			if len(data) < 12+itemLen {
+			itemLen := int(binary.LittleEndian.Uint32(data[integerSize : integerSize+itemLengthSize]))
+			if len(data) < integerSize+itemLengthSize+itemLen {
 				return ErrKeyNotFound
 			}
 			result = make([]byte, itemLen)
-			copy(result, data[12:12+itemLen])
+			copy(result, data[integerSize+itemLengthSize:integerSize+itemLengthSize+itemLen])
 			return txn.Del(db, key, nil)
 		}
 
-		if len(data) < 12 {
+		if len(data) < integerSize+itemLengthSize {
 			return ErrKeyNotFound
 		}
 
-		firstItemLen := int(binary.LittleEndian.Uint32(data[8:12]))
-		if len(data) < 12+firstItemLen {
+		firstItemLen := int(binary.LittleEndian.Uint32(data[integerSize : integerSize+itemLengthSize]))
+		if len(data) < integerSize+itemLengthSize+firstItemLen {
 			return ErrKeyNotFound
 		}
 
 		result = make([]byte, firstItemLen)
-		copy(result, data[12:12+firstItemLen])
+		copy(result, data[integerSize+itemLengthSize:integerSize+itemLengthSize+firstItemLen])
 
-		newData := make([]byte, 8)
-		binary.LittleEndian.PutUint64(newData, uint64(length-1))
-		newData = append(newData, data[12+firstItemLen:]...)
+		newData := make([]byte, integerSize)
+		binary.LittleEndian.PutUint64(newData, uint64(length-singleItem))
+		newData = append(newData, data[integerSize+itemLengthSize+firstItemLen:]...)
 
 		return txn.Put(db, key, newData, noFlags)
 	})

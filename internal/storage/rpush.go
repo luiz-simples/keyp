@@ -9,16 +9,16 @@ import (
 
 func (client *Client) RPush(ctx context.Context, key []byte, values ...[]byte) int64 {
 	if hasError(ctxFlush(ctx)) {
-		return 0
+		return emptyCount
 	}
 
 	if isEmpty(key) || isEmpty(values) {
-		return 0
+		return emptyCount
 	}
 
 	db, err := client.sel(ctx)
 	if hasError(err) {
-		return 0
+		return emptyCount
 	}
 
 	var newLength int64
@@ -27,19 +27,19 @@ func (client *Client) RPush(ctx context.Context, key []byte, values ...[]byte) i
 		data, txnErr := txn.Get(db, key)
 
 		var currentLength int64
-		newData := make([]byte, 8)
+		newData := make([]byte, integerSize)
 
-		if isEmpty(txnErr) && len(data) >= 8 {
-			currentLength = int64(binary.LittleEndian.Uint64(data[:8]))
-			newData = append(newData, data[8:]...)
+		if isEmpty(txnErr) && len(data) >= integerSize {
+			currentLength = int64(binary.LittleEndian.Uint64(data[:integerSize]))
+			newData = append(newData, data[integerSize:]...)
 		}
 
 		newLength = currentLength + int64(len(values))
-		binary.LittleEndian.PutUint64(newData[:8], uint64(newLength))
+		binary.LittleEndian.PutUint64(newData[:integerSize], uint64(newLength))
 
 		for _, value := range values {
-			newData = append(newData, make([]byte, 4)...)
-			binary.LittleEndian.PutUint32(newData[len(newData)-4:], uint32(len(value)))
+			newData = append(newData, make([]byte, itemLengthSize)...)
+			binary.LittleEndian.PutUint32(newData[len(newData)-itemLengthSize:], uint32(len(value)))
 			newData = append(newData, value...)
 		}
 
@@ -47,7 +47,7 @@ func (client *Client) RPush(ctx context.Context, key []byte, values ...[]byte) i
 	})
 
 	if hasError(err) {
-		return 0
+		return emptyCount
 	}
 
 	return newLength

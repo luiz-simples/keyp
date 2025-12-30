@@ -9,16 +9,16 @@ import (
 
 func (client *Client) SRem(ctx context.Context, key []byte, members ...[]byte) int64 {
 	if hasError(ctxFlush(ctx)) {
-		return 0
+		return emptyCount
 	}
 
 	if isEmpty(key) || isEmpty(members) {
-		return 0
+		return emptyCount
 	}
 
 	db, err := client.sel(ctx)
 	if hasError(err) {
-		return 0
+		return emptyCount
 	}
 
 	var removedCount int64
@@ -37,7 +37,7 @@ func (client *Client) SRem(ctx context.Context, key []byte, members ...[]byte) i
 		count := int64(binary.LittleEndian.Uint64(data[:setHeaderSize]))
 		offset := setHeaderSize
 
-		for i := int64(0); i < count; i++ {
+		for i := int64(firstElement); i < count; i++ {
 			if offset+itemLengthSize > len(data) {
 				break
 			}
@@ -63,7 +63,7 @@ func (client *Client) SRem(ctx context.Context, key []byte, members ...[]byte) i
 			}
 		}
 
-		if removedCount == 0 {
+		if removedCount == emptyCount {
 			return nil
 		}
 
@@ -71,7 +71,7 @@ func (client *Client) SRem(ctx context.Context, key []byte, members ...[]byte) i
 			delete(existingMembers, memberStr)
 		}
 
-		if len(existingMembers) == 0 {
+		if len(existingMembers) == emptyCount {
 			return txn.Del(db, key, nil)
 		}
 
@@ -90,7 +90,7 @@ func (client *Client) SRem(ctx context.Context, key []byte, members ...[]byte) i
 	})
 
 	if hasError(err) {
-		return 0
+		return emptyCount
 	}
 
 	return removedCount

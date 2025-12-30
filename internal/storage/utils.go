@@ -12,6 +12,12 @@ const (
 	listHeaderSize = 8
 	setHeaderSize  = 8
 	itemLengthSize = 4
+
+	integerSize = 8
+
+	firstElement = 0
+	emptyCount   = 0
+	singleItem   = 1
 )
 
 func hasError(err error) bool {

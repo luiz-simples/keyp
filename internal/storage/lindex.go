@@ -45,7 +45,7 @@ func (client *Client) LIndex(ctx context.Context, key []byte, index int64) ([]by
 		}
 
 		offset := listHeaderSize
-		for i := int64(0); i <= index; i++ {
+		for i := int64(firstElement); i <= index; i++ {
 			if offset+itemLengthSize > len(data) {
 				return ErrKeyNotFound
 			}

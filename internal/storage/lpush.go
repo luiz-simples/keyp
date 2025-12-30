@@ -9,16 +9,16 @@ import (
 
 func (client *Client) LPush(ctx context.Context, key []byte, values ...[]byte) int64 {
 	if hasError(ctxFlush(ctx)) {
-		return 0
+		return emptyCount
 	}
 
 	if isEmpty(key) || isEmpty(values) {
-		return 0
+		return emptyCount
 	}
 
 	db, err := client.sel(ctx)
 	if hasError(err) {
-		return 0
+		return emptyCount
 	}
 
 	var newLength int64
@@ -29,18 +29,18 @@ func (client *Client) LPush(ctx context.Context, key []byte, values ...[]byte) i
 		var currentLength int64
 		var existingData []byte
 
-		if isEmpty(txnErr) && len(data) >= 8 {
-			currentLength = int64(binary.LittleEndian.Uint64(data[:8]))
-			existingData = data[8:]
+		if isEmpty(txnErr) && len(data) >= integerSize {
+			currentLength = int64(binary.LittleEndian.Uint64(data[:integerSize]))
+			existingData = data[integerSize:]
 		}
 
 		newLength = currentLength + int64(len(values))
-		newData := make([]byte, 8)
+		newData := make([]byte, integerSize)
 		binary.LittleEndian.PutUint64(newData, uint64(newLength))
 
-		for i := len(values) - 1; i >= 0; i-- {
-			newData = append(newData, make([]byte, 4)...)
-			binary.LittleEndian.PutUint32(newData[len(newData)-4:], uint32(len(values[i])))
+		for i := len(values) - singleItem; i >= firstElement; i-- {
+			newData = append(newData, make([]byte, itemLengthSize)...)
+			binary.LittleEndian.PutUint32(newData[len(newData)-itemLengthSize:], uint32(len(values[i])))
 			newData = append(newData, values[i]...)
 		}
 
@@ -50,7 +50,7 @@ func (client *Client) LPush(ctx context.Context, key []byte, values ...[]byte) i
 	})
 
 	if hasError(err) {
-		return 0
+		return emptyCount
 	}
 
 	return newLength

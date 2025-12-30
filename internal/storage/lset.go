@@ -27,42 +27,42 @@ func (client *Client) LSet(ctx context.Context, key []byte, index int64, value [
 			return ErrKeyNotFound
 		}
 
-		if len(data) < 8 {
+		if len(data) < integerSize {
 			return ErrKeyNotFound
 		}
 
-		length := int64(binary.LittleEndian.Uint64(data[:8]))
-		if index < 0 {
+		length := int64(binary.LittleEndian.Uint64(data[:integerSize]))
+		if index < firstElement {
 			index = length + index
 		}
 
-		if index < 0 || index >= length {
+		if index < firstElement || index >= length {
 			return ErrKeyNotFound
 		}
 
-		newData := make([]byte, 8)
+		newData := make([]byte, integerSize)
 		binary.LittleEndian.PutUint64(newData, uint64(length))
 
-		offset := 8
-		for i := int64(0); i < length; i++ {
-			if offset+4 > len(data) {
+		offset := integerSize
+		for i := int64(firstElement); i < length; i++ {
+			if offset+itemLengthSize > len(data) {
 				return ErrKeyNotFound
 			}
 
 			itemLen := int(binary.LittleEndian.Uint32(data[offset:]))
-			offset += 4
+			offset += itemLengthSize
 
 			if i == index {
-				newData = append(newData, make([]byte, 4)...)
-				binary.LittleEndian.PutUint32(newData[len(newData)-4:], uint32(len(value)))
+				newData = append(newData, make([]byte, itemLengthSize)...)
+				binary.LittleEndian.PutUint32(newData[len(newData)-itemLengthSize:], uint32(len(value)))
 				newData = append(newData, value...)
 				offset += itemLen
 			} else {
 				if offset+itemLen > len(data) {
 					return ErrKeyNotFound
 				}
-				newData = append(newData, make([]byte, 4)...)
-				binary.LittleEndian.PutUint32(newData[len(newData)-4:], uint32(itemLen))
+				newData = append(newData, make([]byte, itemLengthSize)...)
+				binary.LittleEndian.PutUint32(newData[len(newData)-itemLengthSize:], uint32(itemLen))
 				newData = append(newData, data[offset:offset+itemLen]...)
 				offset += itemLen
 			}
