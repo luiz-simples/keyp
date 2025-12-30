@@ -15,29 +15,29 @@ Implementação completa de 4 tipos de testes com isolamento total e paraleliza�
 #### 🧪 Unit Tests
 - **Arquivo**: `internal/service/unit_test.go`
 - **Framework**: Ginkgo + Gomega + GoMock
-- **Cobertura**: Comandos PING, SET, GET, DEL com mocks
-- **Cenários**: Sucesso, erro, contexto cancelado, validação
+- **Cobertura**: Comandos básicos (PING, SET, GET, DEL) e comandos de lista (EXISTS, LINDEX, LLEN, LPOP, LPUSH, LRANGE, LSET, RPOP, RPUSH)
+- **Cenários**: Sucesso, erro, contexto cancelado, validação, operações de lista
 - **Mocks**: Gerados com `mockgen` para `domain.Persister`
 
 #### 🔗 Integration Tests  
 - **Arquivo**: `internal/service/integration_test.go`
 - **Framework**: Ginkgo + Gomega + go-redis
-- **Cobertura**: Servidor Redis real com cliente go-redis
-- **Cenários**: Operações básicas, concorrência, valores grandes
+- **Cobertura**: Servidor Redis real com cliente go-redis, comandos básicos e de lista
+- **Cenários**: Operações básicas, operações de lista, concorrência, valores grandes
 - **Protocolo**: Compatibilidade completa com Redis
 
 #### 🎯 Property-Based Tests
 - **Arquivo**: `internal/service/property_test.go` 
 - **Framework**: Ginkgo + Gomega + Gopter
-- **Cobertura**: Propriedades fundamentais (SET-GET, DEL, etc.)
+- **Cobertura**: Propriedades fundamentais (SET-GET, DEL, EXISTS) e operações de lista
 - **Cenários**: 100 testes por propriedade com dados aleatórios
-- **Validação**: Invariantes e comportamentos esperados
+- **Validação**: Invariantes e comportamentos esperados para strings e listas
 
 #### ⚡ Performance Tests
 - **Arquivo**: `internal/service/performance_test.go`
 - **Framework**: Ginkgo + Benchmarks Go nativos
-- **Cobertura**: Métricas de performance e validação de tempo
-- **Cenários**: SET, GET, DEL, PING, operações mistas
+- **Cobertura**: Métricas de performance para comandos básicos e de lista
+- **Cenários**: SET, GET, DEL, PING, EXISTS, operações de lista (LPUSH, RPUSH, etc.)
 - **Benchmarks**: Métricas precisas de ns/op
 
 ### ✅ Package `internal/storage` (Completo)
@@ -47,9 +47,9 @@ Implementação completa de 4 tipos de testes para o sistema de persistência LM
 #### 🧪 Unit Tests (26 testes)
 - **Arquivo**: `internal/storage/unit_test.go`
 - **Framework**: Ginkgo + Gomega
-- **Cobertura**: Todas as operações LMDB (Set, Get, Del, TTL, Expire, Persist)
+- **Cobertura**: Todas as operações LMDB (Set, Get, Del, TTL, Expire, Persist, EXISTS, operações de lista)
 - **Cenários**: Criação de cliente, isolamento de databases, tratamento de erros
-- **Validação**: Chaves vazias, valores grandes, contextos cancelados
+- **Validação**: Chaves vazias, valores grandes, contextos cancelados, operações de lista
 
 #### 🔗 Integration Tests (12 testes)
 - **Arquivo**: `internal/storage/integration_test.go`

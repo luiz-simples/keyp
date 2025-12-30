@@ -22,6 +22,16 @@ type (
 		Persist(context.Context, []byte)
 		Expire(context.Context, []byte, uint32)
 
+		Exists(context.Context, []byte) bool
+		LLen(context.Context, []byte) int64
+		LIndex(context.Context, []byte, int64) ([]byte, error)
+		LSet(context.Context, []byte, int64, []byte) error
+		LPush(context.Context, []byte, ...[]byte) int64
+		RPush(context.Context, []byte, ...[]byte) int64
+		LPop(context.Context, []byte) ([]byte, error)
+		RPop(context.Context, []byte) ([]byte, error)
+		LRange(context.Context, []byte, int64, int64) ([][]byte, error)
+
 		Close()
 	}
 

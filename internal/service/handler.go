@@ -45,6 +45,16 @@ func NewHandler(storage domain.Persister) *Handler {
 		"EXPIRE":  handler.expire,
 		"PERSIST": handler.persist,
 
+		"EXISTS": handler.exists,
+		"LLEN":   handler.llen,
+		"LINDEX": handler.lindex,
+		"LSET":   handler.lset,
+		"LPUSH":  handler.lpush,
+		"RPUSH":  handler.rpush,
+		"LPOP":   handler.lpop,
+		"RPOP":   handler.rpop,
+		"LRANGE": handler.lrange,
+
 		"PING":   ping,
 		"DELETE": handler.del,
 	}
@@ -58,6 +68,16 @@ func NewHandler(storage domain.Persister) *Handler {
 		"TTL":     {MinArgs: 2, MaxArgs: 2},
 		"EXPIRE":  {MinArgs: 3, MaxArgs: 3},
 		"PERSIST": {MinArgs: 2, MaxArgs: 2},
+
+		"EXISTS": {MinArgs: 2, MaxArgs: 2},
+		"LLEN":   {MinArgs: 2, MaxArgs: 2},
+		"LINDEX": {MinArgs: 3, MaxArgs: 3},
+		"LSET":   {MinArgs: 4, MaxArgs: 4},
+		"LPUSH":  {MinArgs: 3, MaxArgs: -1},
+		"RPUSH":  {MinArgs: 3, MaxArgs: -1},
+		"LPOP":   {MinArgs: 2, MaxArgs: 2},
+		"RPOP":   {MinArgs: 2, MaxArgs: 2},
+		"LRANGE": {MinArgs: 4, MaxArgs: 4},
 
 		"PING":   {MinArgs: 1, MaxArgs: 2},
 		"DELETE": {MinArgs: 2, MaxArgs: -1},

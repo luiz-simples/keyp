@@ -9,7 +9,7 @@ import (
 func (client *Client) Set(ctx context.Context, key []byte, val []byte) error {
 	db, err := client.sel(ctx)
 
-	if noError(err) {
+	if isEmpty(err) {
 		err = ctxFlush(ctx)
 	}
 

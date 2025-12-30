@@ -9,7 +9,7 @@ import (
 func (client *Client) Get(ctx context.Context, key []byte) ([]byte, error) {
 	db, err := client.sel(ctx)
 
-	if noError(err) {
+	if isEmpty(err) {
 		err = ctxFlush(ctx)
 	}
 
@@ -27,7 +27,7 @@ func (client *Client) Get(ctx context.Context, key []byte) ([]byte, error) {
 
 		val, txnErr := txn.Get(db, key)
 
-		if noError(txnErr) {
+		if isEmpty(txnErr) {
 			result = val
 			return nil
 		}

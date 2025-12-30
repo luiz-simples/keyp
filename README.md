@@ -5,7 +5,7 @@
 
 > **Documentação**: [ARCHITECTURE.md](ARCHITECTURE.md) | [TESTS.md](TESTS.md)
 
-**Keyp** is a high-performance, Redis-compatible key-value server implemented in Go with LMDB as the persistence backend. Designed with zero-allocation principles and optimized for production workloads while serving as an educational project for advanced Go patterns and architecture design.
+**Keyp** is a high-performance, Redis-compatible key-value server implemented in Go with LMDB as the persistence backend. Supports string operations and list data structures with Redis-compatible commands. Designed with zero-allocation principles and optimized for production workloads while serving as an educational project for advanced Go patterns and architecture design.
 
 ## 🎯 Project Goals
 
@@ -51,6 +51,27 @@ Keyp delivers **equivalent performance** to Redis across most operations, with s
 > **Note**: Keyp prioritizes simplicity and educational value over raw performance. While slightly slower in write-heavy operations, it maintains excellent read performance and provides equivalent functionality for most use cases.
 
 ## 🚀 Quick Start
+
+### Supported Commands
+
+Keyp implements Redis-compatible commands for string and list operations:
+
+#### String Operations
+- `SET key value` - Set a key-value pair
+- `GET key` - Get value by key
+- `DEL key [key ...]` - Delete one or more keys
+- `EXISTS key` - Check if key exists
+- `PING` - Test server connectivity
+
+#### List Operations
+- `LPUSH key value [value ...]` - Push values to the left of list
+- `RPUSH key value [value ...]` - Push values to the right of list
+- `LPOP key` - Pop value from the left of list
+- `RPOP key` - Pop value from the right of list
+- `LLEN key` - Get list length
+- `LINDEX key index` - Get element at index
+- `LRANGE key start stop` - Get range of elements
+- `LSET key index value` - Set element at index
 
 ### Installation
 

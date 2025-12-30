@@ -44,19 +44,19 @@ func NewClient(dataDir string) (*Client, error) {
 
 	env, err := lmdb.NewEnv()
 
-	if noError(err) {
+	if isEmpty(err) {
 		err = env.SetMaxDBs(maxDatabases + 1)
 	}
 
-	if noError(err) {
+	if isEmpty(err) {
 		err = env.SetMapSize(mapSizeBytes)
 	}
 
-	if noError(err) {
+	if isEmpty(err) {
 		err = env.SetMaxReaders(128)
 	}
 
-	if noError(err) {
+	if isEmpty(err) {
 		err = env.Open(dataDir, performFlags, filePerm)
 	}
 

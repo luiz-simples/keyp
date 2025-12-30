@@ -24,6 +24,7 @@ const (
 	noArgs    = 0
 	firstArg  = 1
 	secondArg = 2
+	thirdArg  = 3
 )
 
 func hasError(err error) bool {

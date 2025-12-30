@@ -554,4 +554,348 @@ var _ = Describe("Handler Unit Tests", func() {
 			Expect(results).To(HaveLen(0))
 		})
 	})
+
+	Describe("EXISTS Command", func() {
+		Context("when checking key existence", func() {
+			It("should return 1 for existing key", func() {
+				key := []byte("exists-key")
+				args := [][]byte{[]byte("EXISTS"), key}
+
+				mockPersister.EXPECT().
+					Exists(gomock.Any(), key).
+					Return(true)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 4)
+				binary.LittleEndian.PutUint32(expectedResponse, 1)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return 0 for non-existing key", func() {
+				key := []byte("non-exists-key")
+				args := [][]byte{[]byte("EXISTS"), key}
+
+				mockPersister.EXPECT().
+					Exists(gomock.Any(), key).
+					Return(false)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 4)
+				binary.LittleEndian.PutUint32(expectedResponse, 0)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
+
+	Describe("LLEN Command", func() {
+		Context("when getting list length", func() {
+			It("should return list length", func() {
+				key := []byte("list-key")
+				args := [][]byte{[]byte("LLEN"), key}
+				expectedLength := int64(5)
+
+				mockPersister.EXPECT().
+					LLen(gomock.Any(), key).
+					Return(expectedLength)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedLength))
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return 0 for non-existing list", func() {
+				key := []byte("non-list-key")
+				args := [][]byte{[]byte("LLEN"), key}
+
+				mockPersister.EXPECT().
+					LLen(gomock.Any(), key).
+					Return(int64(0))
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, 0)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
+
+	Describe("LINDEX Command", func() {
+		Context("when getting element by index", func() {
+			It("should return element at valid index", func() {
+				key := []byte("list-key")
+				index := []byte("2")
+				args := [][]byte{[]byte("LINDEX"), key, index}
+				expectedValue := []byte("element-2")
+
+				mockPersister.EXPECT().
+					LIndex(gomock.Any(), key, int64(2)).
+					Return(expectedValue, nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+				Expect(results[0].Response).To(Equal(expectedValue))
+			})
+
+			It("should return error for invalid index", func() {
+				key := []byte("list-key")
+				index := []byte("10")
+				args := [][]byte{[]byte("LINDEX"), key, index}
+				expectedError := errors.New("index out of range")
+
+				mockPersister.EXPECT().
+					LIndex(gomock.Any(), key, int64(10)).
+					Return(nil, expectedError)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(expectedError))
+			})
+		})
+	})
+
+	Describe("LSET Command", func() {
+		Context("when setting element by index", func() {
+			It("should set element at valid index", func() {
+				key := []byte("list-key")
+				index := []byte("1")
+				value := []byte("new-value")
+				args := [][]byte{[]byte("LSET"), key, index, value}
+
+				mockPersister.EXPECT().
+					LSet(gomock.Any(), key, int64(1), value).
+					Return(nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+				Expect(results[0].Response).To(Equal([]byte("OK")))
+			})
+
+			It("should return error for invalid index", func() {
+				key := []byte("list-key")
+				index := []byte("10")
+				value := []byte("new-value")
+				args := [][]byte{[]byte("LSET"), key, index, value}
+				expectedError := errors.New("index out of range")
+
+				mockPersister.EXPECT().
+					LSet(gomock.Any(), key, int64(10), value).
+					Return(expectedError)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(expectedError))
+			})
+		})
+	})
+
+	Describe("LPUSH Command", func() {
+		Context("when pushing elements to left", func() {
+			It("should push single element", func() {
+				key := []byte("list-key")
+				value := []byte("new-element")
+				args := [][]byte{[]byte("LPUSH"), key, value}
+				expectedLength := int64(3)
+
+				mockPersister.EXPECT().
+					LPush(gomock.Any(), key, value).
+					Return(expectedLength)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedLength))
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should push multiple elements", func() {
+				key := []byte("list-key")
+				value1 := []byte("element1")
+				value2 := []byte("element2")
+				args := [][]byte{[]byte("LPUSH"), key, value1, value2}
+				expectedLength := int64(5)
+
+				mockPersister.EXPECT().
+					LPush(gomock.Any(), key, value1, value2).
+					Return(expectedLength)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedLength))
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
+
+	Describe("RPUSH Command", func() {
+		Context("when pushing elements to right", func() {
+			It("should push single element", func() {
+				key := []byte("list-key")
+				value := []byte("new-element")
+				args := [][]byte{[]byte("RPUSH"), key, value}
+				expectedLength := int64(4)
+
+				mockPersister.EXPECT().
+					RPush(gomock.Any(), key, value).
+					Return(expectedLength)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 8)
+				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedLength))
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
+
+	Describe("LPOP Command", func() {
+		Context("when popping from left", func() {
+			It("should return and remove leftmost element", func() {
+				key := []byte("list-key")
+				args := [][]byte{[]byte("LPOP"), key}
+				expectedValue := []byte("first-element")
+
+				mockPersister.EXPECT().
+					LPop(gomock.Any(), key).
+					Return(expectedValue, nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+				Expect(results[0].Response).To(Equal(expectedValue))
+			})
+
+			It("should return error for empty list", func() {
+				key := []byte("empty-list")
+				args := [][]byte{[]byte("LPOP"), key}
+				expectedError := errors.New("list is empty")
+
+				mockPersister.EXPECT().
+					LPop(gomock.Any(), key).
+					Return(nil, expectedError)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(Equal(expectedError))
+			})
+		})
+	})
+
+	Describe("RPOP Command", func() {
+		Context("when popping from right", func() {
+			It("should return and remove rightmost element", func() {
+				key := []byte("list-key")
+				args := [][]byte{[]byte("RPOP"), key}
+				expectedValue := []byte("last-element")
+
+				mockPersister.EXPECT().
+					RPop(gomock.Any(), key).
+					Return(expectedValue, nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+				Expect(results[0].Response).To(Equal(expectedValue))
+			})
+		})
+	})
+
+	Describe("LRANGE Command", func() {
+		Context("when getting range of elements", func() {
+			It("should return elements in range", func() {
+				key := []byte("list-key")
+				start := []byte("0")
+				stop := []byte("2")
+				args := [][]byte{[]byte("LRANGE"), key, start, stop}
+				expectedValues := [][]byte{
+					[]byte("elem1"),
+					[]byte("elem2"),
+					[]byte("elem3"),
+				}
+
+				mockPersister.EXPECT().
+					LRange(gomock.Any(), key, int64(0), int64(2)).
+					Return(expectedValues, nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				totalSize := 4
+				for _, value := range expectedValues {
+					totalSize += 4 + len(value)
+				}
+
+				expectedResponse := make([]byte, totalSize)
+				offset := 0
+				binary.LittleEndian.PutUint32(expectedResponse[offset:], uint32(len(expectedValues)))
+				offset += 4
+
+				for _, value := range expectedValues {
+					binary.LittleEndian.PutUint32(expectedResponse[offset:], uint32(len(value)))
+					offset += 4
+					copy(expectedResponse[offset:], value)
+					offset += len(value)
+				}
+
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+
+			It("should return empty array for non-existing key", func() {
+				key := []byte("non-list")
+				start := []byte("0")
+				stop := []byte("2")
+				args := [][]byte{[]byte("LRANGE"), key, start, stop}
+
+				mockPersister.EXPECT().
+					LRange(gomock.Any(), key, int64(0), int64(2)).
+					Return([][]byte{}, nil)
+
+				results := handler.Apply(ctx, args)
+
+				Expect(results).To(HaveLen(1))
+				Expect(results[0].Error).To(BeNil())
+
+				expectedResponse := make([]byte, 4)
+				binary.LittleEndian.PutUint32(expectedResponse, 0)
+				Expect(results[0].Response).To(Equal(expectedResponse))
+			})
+		})
+	})
 })

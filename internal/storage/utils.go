@@ -2,33 +2,45 @@ package storage
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/PowerDNS/lmdb-go/lmdb"
+)
+
+const (
+	listHeaderSize = 8
+	itemLengthSize = 4
 )
 
 func hasError(err error) bool {
 	return err != nil
 }
 
-func noError(err error) bool {
-	return err == nil
-}
-
 func isEmpty(data any) bool {
-	if byteSlice, ok := data.([]byte); ok {
-		return len(byteSlice) == 0
+	str, isStr := data.(string)
+
+	if isStr {
+		return strings.TrimSpace(str) == ""
 	}
 
-	if byteSliceSlice, ok := data.([][]byte); ok {
-		return len(byteSliceSlice) == 0
+	bytes, isBytes := data.([]byte)
+
+	if isBytes {
+		return len(bytes) == 0
 	}
 
-	return false
+	listBytes, isListBytes := data.([][]byte)
+
+	if isListBytes {
+		return len(listBytes) == 0
+	}
+
+	return data == nil
 }
 
 func isNotFound(err error) bool {
-	if noError(err) {
+	if isEmpty(err) {
 		return false
 	}
 
@@ -37,6 +49,18 @@ func isNotFound(err error) bool {
 	}
 
 	return err == ErrKeyNotFound
+}
+
+func hasValidListHeader(data []byte) bool {
+	return len(data) >= listHeaderSize
+}
+
+func isNegativeIndex(index int64) bool {
+	return index < 0
+}
+
+func isIndexOutOfBounds(index, length int64) bool {
+	return index < 0 || index >= length
 }
 
 func ctxFlush(ctx context.Context) error {
