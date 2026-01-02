@@ -7,25 +7,25 @@ linters-settings:
   errcheck:
     check-type-assertions: true
     check-blank: false
-  
+
   govet:
     enable-all: true
     disable:
       - fieldalignment
-  
+
   gocyclo:
     min-complexity: 15
-  
+
   funlen:
     lines: 60
     statements: 40
-  
+
   gocognit:
     min-complexity: 20
-  
+
   lll:
     line-length: 230
-  
+
   unused:
     check-exported: true
 
@@ -34,16 +34,16 @@ linters-settings:
 
   goimports:
     local-prefixes: github.com/luiz-simples/keyp.git
-  
+
   dupl:
     threshold: 100
-  
+
   gofmt:
     simplify: true
-  
+
   gofumpt:
     extra-rules: true
-  
+
   revive:
     rules:
       - name: early-return
@@ -55,23 +55,23 @@ linters-settings:
       - name: superfluous-else
         severity: error
         disabled: false
-  
+
   gocritic:
     disabled-checks:
       - exitAfterDefer
     settings:
       ifElseChain:
         minThreshold: 2
-  
+
   intrange:
     always: true
-  
+
   godot:
     scope: declarations
     exclude: []
     period: true
     capital: true
-  
+
   godox:
     keywords:
       - TODO

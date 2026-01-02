@@ -236,9 +236,9 @@ var _ = Describe("Handler Property-Based Tests", func() {
 				func(message string) bool {
 					var args [][]byte
 
-					if message == "" {
-						args = [][]byte{[]byte("PING")}
-					} else {
+					args = [][]byte{[]byte("PING")}
+
+					if message != "" {
 						args = [][]byte{[]byte("PING"), []byte(message)}
 					}
 

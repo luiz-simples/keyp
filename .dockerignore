@@ -1,0 +1,39 @@
+# Arquivos de desenvolvimento
+.git/
+.gitignore
+.DS_Store
+
+# Binários e builds
+bin/
+*.test
+*.out
+coverage.html
+coverprofile.out
+service.test
+
+# Documentação
+*.md
+ARCHITECTURE.md
+FUTURE.md
+TESTS.md
+README.md
+
+# Configurações IDE
+.kiro/
+.vscode/
+.idea/
+
+# Arquivos temporários
+*.tmp
+*.log
+
+# Dados de desenvolvimento
+data/
+*.db
+
+# Arquivos de teste
+*_test.go
+testdata/
+
+# Dependências (serão baixadas no container)
+vendor/
