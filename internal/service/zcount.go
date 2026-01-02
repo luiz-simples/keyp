@@ -9,19 +9,19 @@ import (
 
 func (handler *Handler) zcount(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	minStr := string(args[secondArg])
-	maxStr := string(args[thirdArg])
+	key := args[domain.FirstArg]
+	minStr := string(args[domain.SecondArg])
+	maxStr := string(args[domain.ThirdArg])
 
 	min, err := strconv.ParseFloat(minStr, 64)
 	if hasError(err) {
-		res.Error = ErrInvalidFloat
+		res.Error = domain.ErrInvalidFloat
 		return res
 	}
 
 	max, err := strconv.ParseFloat(maxStr, 64)
 	if hasError(err) {
-		res.Error = ErrInvalidFloat
+		res.Error = domain.ErrInvalidFloat
 		return res
 	}
 

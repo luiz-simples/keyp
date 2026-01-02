@@ -3,27 +3,29 @@ package service
 import (
 	"context"
 	"errors"
+
+	"github.com/luiz-simples/keyp.git/internal/domain"
 )
 
 func (handler *Handler) Apply(ctx context.Context, args Args) Results {
 	if emptyArgs(args) {
-		return Results{{Error: EMPTY}}
+		return Results{{Error: domain.ErrEmpty}}
 	}
 
 	cmdName := normalizeCommandName(string(args[0]))
 
-	if cmdName == MULTI {
+	if cmdName == domain.MULTI {
 		handler.multEnabled = true
 		return Results{{Response: OK}}
 	}
 
-	if cmdName == DISCARD {
+	if cmdName == domain.DISCARD {
 		handler.multEnabled = false
 		handler.multArgs = handler.multArgs[:0]
 		return Results{{Response: OK}}
 	}
 
-	if cmdName == EXEC {
+	if cmdName == domain.EXEC {
 		return handler.exec()
 	}
 
@@ -41,7 +43,7 @@ func (handler *Handler) Apply(ctx context.Context, args Args) Results {
 
 	if handler.multEnabled {
 		handler.multArgs = append(handler.multArgs, args)
-		return Results{{Response: QUEUED}}
+		return Results{{Response: domain.QUEUED}}
 	}
 
 	return Results{handler.commands[cmdName](args)}

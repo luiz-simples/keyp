@@ -25,19 +25,20 @@ func (client *Client) Append(ctx context.Context, key, value []byte) int64 {
 	err = client.env.Update(func(txn *lmdb.Txn) error {
 		data, txnErr := txn.Get(db, key)
 
-		var newData []byte
-
 		if isNotFound(txnErr) {
-			newData = make([]byte, len(value))
+			newData := make([]byte, len(value))
 			copy(newData, value)
-		} else if hasError(txnErr) {
-			return txnErr
-		} else {
-			newData = make([]byte, len(data)+len(value))
-			copy(newData, data)
-			copy(newData[len(data):], value)
+			newLength = int64(len(newData))
+			return txn.Put(db, key, newData, noFlags)
 		}
 
+		if hasError(txnErr) {
+			return txnErr
+		}
+
+		newData := make([]byte, len(data)+len(value))
+		copy(newData, data)
+		copy(newData[len(data):], value)
 		newLength = int64(len(newData))
 		return txn.Put(db, key, newData, noFlags)
 	})

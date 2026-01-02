@@ -46,7 +46,7 @@ var _ = Describe("Handler Performance Tests", func() {
 			args := [][]byte{[]byte("SET"), key, value}
 
 			start := time.Now()
-			for i := 0; i < 1000; i++ {
+			for range 1000 {
 				results := handler.Apply(ctx, args)
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
@@ -66,7 +66,7 @@ var _ = Describe("Handler Performance Tests", func() {
 			getArgs := [][]byte{[]byte("GET"), key}
 
 			start := time.Now()
-			for i := 0; i < 1000; i++ {
+			for range 1000 {
 				results := handler.Apply(ctx, getArgs)
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
@@ -81,7 +81,7 @@ var _ = Describe("Handler Performance Tests", func() {
 			args := [][]byte{[]byte("PING")}
 
 			start := time.Now()
-			for i := 0; i < 10000; i++ {
+			for range 10000 {
 				results := handler.Apply(ctx, args)
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
@@ -97,7 +97,7 @@ var _ = Describe("Handler Performance Tests", func() {
 			value := []byte("mixed operation value")
 
 			start := time.Now()
-			for i := 0; i < 1000; i++ {
+			for i := range 1000 {
 				key := []byte(fmt.Sprintf("%s:%d", baseKey, i))
 
 				setArgs := [][]byte{[]byte("SET"), key, value}
@@ -127,7 +127,7 @@ var _ = Describe("Handler Performance Tests", func() {
 			value := []byte("large dataset test value")
 
 			start := time.Now()
-			for i := 0; i < numKeys; i++ {
+			for i := range numKeys {
 				key := []byte(fmt.Sprintf("%s:%d", baseKey, i))
 				setArgs := [][]byte{[]byte("SET"), key, value}
 				results := handler.Apply(ctx, setArgs)
@@ -137,7 +137,7 @@ var _ = Describe("Handler Performance Tests", func() {
 			setupDuration := time.Since(start)
 
 			start = time.Now()
-			for i := 0; i < numKeys; i++ {
+			for i := range numKeys {
 				key := []byte(fmt.Sprintf("%s:%d", baseKey, i))
 				getArgs := [][]byte{[]byte("GET"), key}
 				results := handler.Apply(ctx, getArgs)
@@ -170,7 +170,7 @@ func BenchmarkHandlerSET(b *testing.B) {
 	args := [][]byte{[]byte("SET"), key, value}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		results := handler.Apply(ctx, args)
 		if len(results) != 1 || results[0].Error != nil {
 			b.Fatal("SET operation failed")
@@ -199,7 +199,7 @@ func BenchmarkHandlerGET(b *testing.B) {
 	getArgs := [][]byte{[]byte("GET"), key}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		results := handler.Apply(ctx, getArgs)
 		if len(results) != 1 || results[0].Error != nil {
 			b.Fatal("GET operation failed")
@@ -222,7 +222,7 @@ func BenchmarkHandlerDEL(b *testing.B) {
 	value := []byte("benchmark value")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		key := []byte(fmt.Sprintf("benchmark:key:%d", i))
 
 		setArgs := [][]byte{[]byte("SET"), key, value}
@@ -251,7 +251,7 @@ func BenchmarkHandlerPING(b *testing.B) {
 	args := [][]byte{[]byte("PING")}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		results := handler.Apply(ctx, args)
 		if len(results) != 1 || results[0].Error != nil {
 			b.Fatal("PING operation failed")
@@ -274,7 +274,7 @@ func BenchmarkHandlerMixed(b *testing.B) {
 	value := []byte("benchmark value")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		key := []byte(fmt.Sprintf("benchmark:mixed:%d", i))
 
 		setArgs := [][]byte{[]byte("SET"), key, value}

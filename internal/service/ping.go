@@ -10,6 +10,6 @@ func ping(args Args) *Result {
 		return result
 	}
 
-	result.Response = PONG
+	result.Response = domain.PONG
 	return result
 }

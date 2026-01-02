@@ -8,8 +8,8 @@ import (
 
 func (handler *Handler) srem(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	members := args[secondArg:]
+	key := args[domain.FirstArg]
+	members := args[domain.SecondArg:]
 
 	count := handler.storage.SRem(handler.context, key, members...)
 

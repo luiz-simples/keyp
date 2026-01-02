@@ -8,8 +8,8 @@ import (
 
 func (handler *Handler) append(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	value := args[secondArg]
+	key := args[domain.FirstArg]
+	value := args[domain.SecondArg]
 
 	length := handler.storage.Append(handler.context, key, value)
 

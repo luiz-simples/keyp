@@ -9,13 +9,13 @@ import (
 
 func (handler *Handler) zadd(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	scoreStr := string(args[secondArg])
-	member := args[thirdArg]
+	key := args[domain.FirstArg]
+	scoreStr := string(args[domain.SecondArg])
+	member := args[domain.ThirdArg]
 
 	score, err := strconv.ParseFloat(scoreStr, 64)
 	if hasError(err) {
-		res.Error = ErrInvalidFloat
+		res.Error = domain.ErrInvalidFloat
 		return res
 	}
 

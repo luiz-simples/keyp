@@ -9,10 +9,7 @@ build:
 		./cmd/keyp
 
 lint:
-	golangci-lint run
-
-format:
-	go fmt ./...
+	golangci-lint run --fix ./...
 
 test:
 	ginkgo -cover ./...

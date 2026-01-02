@@ -7,7 +7,7 @@ import (
 	"github.com/PowerDNS/lmdb-go/lmdb"
 )
 
-func (client *Client) SIsMember(ctx context.Context, key []byte, member []byte) bool {
+func (client *Client) SIsMember(ctx context.Context, key, member []byte) bool {
 	if hasError(ctxFlush(ctx)) {
 		return false
 	}

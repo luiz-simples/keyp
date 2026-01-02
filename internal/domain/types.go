@@ -1,6 +1,32 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"errors"
+)
+
+var (
+	OK     []byte = []byte("OK")
+	PONG   []byte = []byte("PONG")
+	QUEUED []byte = []byte("QUEUED")
+
+	ErrEmpty          error = errors.New("ERR empty command")
+	ErrCanceled       error = errors.New("ERR operation canceled")
+	ErrInvalidFloat   error = errors.New("ERR value is not a valid float")
+	ErrInvalidInteger error = errors.New("ERR value is not an integer or out of range")
+)
+
+const (
+	PING    string = "PING"
+	MULTI   string = "MULTI"
+	EXEC    string = "EXEC"
+	DISCARD string = "DISCARD"
+
+	EmptyArgs = 0
+	FirstArg  = 1
+	SecondArg = 2
+	ThirdArg  = 3
+)
 
 type (
 	Result struct {

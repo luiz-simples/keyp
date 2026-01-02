@@ -8,7 +8,7 @@ import (
 
 func (handler *Handler) smembers(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
+	key := args[domain.FirstArg]
 
 	members, err := handler.storage.SMembers(handler.context, key)
 	if hasError(err) {

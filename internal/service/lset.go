@@ -8,9 +8,9 @@ import (
 
 func (handler *Handler) lset(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	indexInt, _ := strconv.ParseInt(string(args[secondArg]), 10, 64)
-	value := args[thirdArg]
+	key := args[domain.FirstArg]
+	indexInt, _ := strconv.ParseInt(string(args[domain.SecondArg]), 10, 64)
+	value := args[domain.ThirdArg]
 
 	err := handler.storage.LSet(handler.context, key, indexInt, value)
 	if hasError(err) {

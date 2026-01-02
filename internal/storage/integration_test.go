@@ -46,12 +46,12 @@ var _ = Describe("Storage Integration Tests", Label("integration"), func() {
 				var wg sync.WaitGroup
 				wg.Add(numGoroutines)
 
-				for i := 0; i < numGoroutines; i++ {
+				for i := range numGoroutines {
 					go func(goroutineID int) {
 						defer wg.Done()
 						defer GinkgoRecover()
 
-						for j := 0; j < keysPerGoroutine; j++ {
+						for j := range keysPerGoroutine {
 							key := []byte(fmt.Sprintf("concurrent-key-%d-%d", goroutineID, j))
 							value := []byte(fmt.Sprintf("concurrent-value-%d-%d", goroutineID, j))
 
@@ -63,8 +63,8 @@ var _ = Describe("Storage Integration Tests", Label("integration"), func() {
 
 				wg.Wait()
 
-				for i := 0; i < numGoroutines; i++ {
-					for j := 0; j < keysPerGoroutine; j++ {
+				for i := range numGoroutines {
+					for j := range keysPerGoroutine {
 						key := []byte(fmt.Sprintf("concurrent-key-%d-%d", i, j))
 						expectedValue := []byte(fmt.Sprintf("concurrent-value-%d-%d", i, j))
 
@@ -82,7 +82,7 @@ var _ = Describe("Storage Integration Tests", Label("integration"), func() {
 				var wg sync.WaitGroup
 				wg.Add(numGoroutines)
 
-				for i := 0; i < numGoroutines; i++ {
+				for i := range numGoroutines {
 					go func(goroutineID int) {
 						defer wg.Done()
 						defer GinkgoRecover()
@@ -109,7 +109,7 @@ var _ = Describe("Storage Integration Tests", Label("integration"), func() {
 				var wg sync.WaitGroup
 				wg.Add(numOperations * 3)
 
-				for i := 0; i < numOperations; i++ {
+				for i := range numOperations {
 					go func(id int) {
 						defer wg.Done()
 						defer GinkgoRecover()
@@ -121,7 +121,7 @@ var _ = Describe("Storage Integration Tests", Label("integration"), func() {
 					}(i)
 				}
 
-				for i := 0; i < numOperations; i++ {
+				for i := range numOperations {
 					go func(id int) {
 						defer wg.Done()
 						defer GinkgoRecover()
@@ -131,7 +131,7 @@ var _ = Describe("Storage Integration Tests", Label("integration"), func() {
 					}(i)
 				}
 
-				for i := 0; i < numOperations; i++ {
+				for i := range numOperations {
 					go func(id int) {
 						defer wg.Done()
 						defer GinkgoRecover()
@@ -312,13 +312,13 @@ var _ = Describe("Storage Integration Tests", Label("integration"), func() {
 				keyPrefix := "small-key-"
 				value := []byte("small-value")
 
-				for i := 0; i < numKeys; i++ {
+				for i := range numKeys {
 					key := []byte(fmt.Sprintf("%s%d", keyPrefix, i))
 					err := client.Set(ctx, key, value)
 					Expect(err).NotTo(HaveOccurred())
 				}
 
-				for i := 0; i < numKeys; i++ {
+				for i := range numKeys {
 					key := []byte(fmt.Sprintf("%s%d", keyPrefix, i))
 					result, err := client.Get(ctx, key)
 					Expect(err).NotTo(HaveOccurred())
@@ -326,7 +326,7 @@ var _ = Describe("Storage Integration Tests", Label("integration"), func() {
 				}
 
 				keys := make([][]byte, numKeys)
-				for i := 0; i < numKeys; i++ {
+				for i := range numKeys {
 					keys[i] = []byte(fmt.Sprintf("%s%d", keyPrefix, i))
 				}
 

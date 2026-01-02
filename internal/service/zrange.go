@@ -8,19 +8,19 @@ import (
 
 func (handler *Handler) zrange(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	startStr := string(args[secondArg])
-	stopStr := string(args[thirdArg])
+	key := args[domain.FirstArg]
+	startStr := string(args[domain.SecondArg])
+	stopStr := string(args[domain.ThirdArg])
 
 	start, err := strconv.ParseInt(startStr, 10, 64)
 	if hasError(err) {
-		res.Error = ErrInvalidInteger
+		res.Error = domain.ErrInvalidInteger
 		return res
 	}
 
 	stop, err := strconv.ParseInt(stopStr, 10, 64)
 	if hasError(err) {
-		res.Error = ErrInvalidInteger
+		res.Error = domain.ErrInvalidInteger
 		return res
 	}
 

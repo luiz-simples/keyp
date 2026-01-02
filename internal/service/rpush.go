@@ -8,8 +8,8 @@ import (
 
 func (handler *Handler) rpush(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	values := args[secondArg:]
+	key := args[domain.FirstArg]
+	values := args[domain.SecondArg:]
 
 	length := handler.storage.RPush(handler.context, key, values...)
 

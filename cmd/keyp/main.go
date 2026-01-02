@@ -19,6 +19,7 @@ func main() {
 	if noError(err) {
 		poolService := service.NewPool(lmdb)
 		server := app.NewServer(poolService)
+		defer server.Close()
 		err = server.Start(config)
 	}
 

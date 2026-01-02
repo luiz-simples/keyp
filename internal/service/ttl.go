@@ -8,7 +8,7 @@ import (
 
 func (handler *Handler) ttl(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
+	key := args[domain.FirstArg]
 	secs := handler.storage.TTL(handler.context, key)
 
 	res.Response = make([]byte, 4)

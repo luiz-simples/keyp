@@ -8,7 +8,7 @@ import (
 
 func (handler *Handler) decr(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
+	key := args[domain.FirstArg]
 
 	value, err := handler.storage.Decr(handler.context, key)
 	if hasError(err) {

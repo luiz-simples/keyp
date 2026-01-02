@@ -15,8 +15,8 @@ var (
 )
 
 const (
-	dirPerm      = 0755
-	filePerm     = 0644
+	dirPerm      = 0o755
+	filePerm     = 0o644
 	maxDatabases = 100
 	mapSizeBytes = 4 << 30
 	noFlags      = 0

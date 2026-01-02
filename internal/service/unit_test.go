@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"go.uber.org/mock/gomock"
 
+	"github.com/luiz-simples/keyp.git/internal/domain"
 	"github.com/luiz-simples/keyp.git/internal/service"
 )
 
@@ -481,9 +482,7 @@ var _ = Describe("Handler Unit Tests", func() {
 	})
 
 	Describe("Pool Management", func() {
-		var (
-			pool *service.Pool
-		)
+		var pool *service.Pool
 
 		BeforeEach(func() {
 			pool = service.NewPool(mockPersister)
@@ -1159,7 +1158,7 @@ var _ = Describe("Handler Unit Tests", func() {
 				results := handler.Apply(ctx, args)
 
 				Expect(results).To(HaveLen(1))
-				Expect(results[0].Error).To(Equal(service.ErrInvalidFloat))
+				Expect(results[0].Error).To(Equal(domain.ErrInvalidFloat))
 			})
 		})
 	})
@@ -1207,7 +1206,7 @@ var _ = Describe("Handler Unit Tests", func() {
 				results := handler.Apply(ctx, args)
 
 				Expect(results).To(HaveLen(1))
-				Expect(results[0].Error).To(Equal(service.ErrInvalidInteger))
+				Expect(results[0].Error).To(Equal(domain.ErrInvalidInteger))
 			})
 		})
 	})
@@ -1243,7 +1242,7 @@ var _ = Describe("Handler Unit Tests", func() {
 				results := handler.Apply(ctx, args)
 
 				Expect(results).To(HaveLen(1))
-				Expect(results[0].Error).To(Equal(service.ErrInvalidFloat))
+				Expect(results[0].Error).To(Equal(domain.ErrInvalidFloat))
 			})
 		})
 	})
@@ -1314,7 +1313,7 @@ var _ = Describe("Handler Unit Tests", func() {
 				results := handler.Apply(ctx, args)
 
 				Expect(results).To(HaveLen(1))
-				Expect(results[0].Error).To(Equal(service.ErrInvalidInteger))
+				Expect(results[0].Error).To(Equal(domain.ErrInvalidInteger))
 			})
 		})
 	})
@@ -1385,7 +1384,7 @@ var _ = Describe("Handler Unit Tests", func() {
 				results := handler.Apply(ctx, args)
 
 				Expect(results).To(HaveLen(1))
-				Expect(results[0].Error).To(Equal(service.ErrInvalidInteger))
+				Expect(results[0].Error).To(Equal(domain.ErrInvalidInteger))
 			})
 		})
 	})

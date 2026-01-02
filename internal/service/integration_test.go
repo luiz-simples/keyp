@@ -158,7 +158,7 @@ var _ = Describe("Handler Integration Tests", func() {
 		It("should handle multiple operations in sequence", func() {
 			baseKey := "integration:sequence"
 
-			for i := 0; i < 10; i++ {
+			for i := range 10 {
 				key := fmt.Sprintf("%s:%d", baseKey, i)
 				value := fmt.Sprintf("value_%d", i)
 
@@ -166,7 +166,7 @@ var _ = Describe("Handler Integration Tests", func() {
 				Expect(setResult.Err()).NotTo(HaveOccurred())
 			}
 
-			for i := 0; i < 10; i++ {
+			for i := range 10 {
 				key := fmt.Sprintf("%s:%d", baseKey, i)
 				expectedValue := fmt.Sprintf("value_%d", i)
 
@@ -182,11 +182,11 @@ var _ = Describe("Handler Integration Tests", func() {
 
 			done := make(chan bool, numGoroutines)
 
-			for g := 0; g < numGoroutines; g++ {
+			for g := range numGoroutines {
 				go func(goroutineID int) {
 					defer GinkgoRecover()
 
-					for i := 0; i < operationsPerGoroutine; i++ {
+					for i := range operationsPerGoroutine {
 						key := fmt.Sprintf("concurrent:%d:%d", goroutineID, i)
 						value := fmt.Sprintf("value_%d_%d", goroutineID, i)
 
@@ -202,7 +202,7 @@ var _ = Describe("Handler Integration Tests", func() {
 				}(g)
 			}
 
-			for i := 0; i < numGoroutines; i++ {
+			for range numGoroutines {
 				Eventually(done).Should(Receive())
 			}
 		})

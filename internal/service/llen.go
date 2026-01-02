@@ -8,7 +8,7 @@ import (
 
 func (handler *Handler) llen(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
+	key := args[domain.FirstArg]
 	length := handler.storage.LLen(handler.context, key)
 
 	res.Response = make([]byte, 8)

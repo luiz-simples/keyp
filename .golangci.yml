@@ -1,6 +1,7 @@
 run:
-  timeout: 5m
+  timeout: 3m
   tests: true
+  go: "1.25"
 
 linters-settings:
   errcheck:
@@ -23,55 +24,109 @@ linters-settings:
     min-complexity: 20
   
   lll:
-    line-length: 120
+    line-length: 230
   
   unused:
     check-exported: true
-  
+
   unparam:
     check-exported: true
-  
+
   goimports:
     local-prefixes: github.com/luiz-simples/keyp.git
+  
+  dupl:
+    threshold: 100
+  
+  gofmt:
+    simplify: true
+  
+  gofumpt:
+    extra-rules: true
+  
+  revive:
+    rules:
+      - name: early-return
+        severity: error
+        disabled: false
+      - name: indent-error-flow
+        severity: error
+        disabled: false
+      - name: superfluous-else
+        severity: error
+        disabled: false
+  
+  gocritic:
+    disabled-checks:
+      - exitAfterDefer
+    settings:
+      ifElseChain:
+        minThreshold: 2
+  
+  intrange:
+    always: true
+  
+  godot:
+    scope: declarations
+    exclude: []
+    period: true
+    capital: true
+  
+  godox:
+    keywords:
+      - TODO
+      - FIXME
+      - BUG
+      - HACK
+      - NOTE
+      - XXX
+      - OPTIMIZE
+      - REVIEW
+      - "//"
 
 linters:
   disable-all: true
   enable:
     - errcheck
+    - dupl
+    - gocritic
+    - godot
+    - godox
+    - gofmt
+    - gofumpt
+    - goimports
     - gosimple
     - govet
     - ineffassign
+    - intrange
+    - misspell
+    - revive
     - staticcheck
     - typecheck
-    - unused
-    - goimports
-    - misspell
     - unconvert
+    - unused
 
 issues:
   exclude-rules:
     - path: _test\.go
       linters:
         - errcheck
-        - gosec
-        - funlen
-        - gocognit
-        - gocyclo
-        - lll
-    
-    - path: cmd/
-      linters:
-        - errcheck
-    
-    - text: "Error return value.*is not checked"
-      linters:
-        - errcheck
-      source: "defer.*Close"
-    
-    - text: "Error return value.*is not checked"
-      linters:
-        - errcheck
-      source: "_ ="
-
+        - dupl
+        # - gocritic
+        # - godot
+        # - godox
+        # - gofmt
+        # - gofumpt
+        # - goimports
+        # - gosimple
+        # - govet
+        # - ineffassign
+        # - intrange
+        # - misspell
+        # - revive
+        # - staticcheck
+        # - typecheck
+        # - unconvert
+        # - unused
   max-issues-per-linter: 0
   max-same-issues: 0

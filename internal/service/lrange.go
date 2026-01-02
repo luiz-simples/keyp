@@ -9,9 +9,9 @@ import (
 
 func (handler *Handler) lrange(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	startInt, _ := strconv.ParseInt(string(args[secondArg]), 10, 64)
-	stopInt, _ := strconv.ParseInt(string(args[thirdArg]), 10, 64)
+	key := args[domain.FirstArg]
+	startInt, _ := strconv.ParseInt(string(args[domain.SecondArg]), 10, 64)
+	stopInt, _ := strconv.ParseInt(string(args[domain.ThirdArg]), 10, 64)
 
 	values, err := handler.storage.LRange(handler.context, key, startInt, stopInt)
 	if hasError(err) {

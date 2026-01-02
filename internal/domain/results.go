@@ -1,17 +1,12 @@
 package domain
 
-import "errors"
-
-var OK []byte = []byte("OK")
-var CANCELED error = errors.New("ERR operation canceled")
-
 func NewResult() *Result {
 	result := Result{}
 	return result.Clear()
 }
 
 func (result *Result) SetCanceled() *Result {
-	result.Error = CANCELED
+	result.Error = ErrCanceled
 	result.Response = nil
 	return result
 }

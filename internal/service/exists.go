@@ -8,7 +8,7 @@ import (
 
 func (handler *Handler) exists(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
+	key := args[domain.FirstArg]
 	exists := handler.storage.Exists(handler.context, key)
 
 	res.Response = make([]byte, 4)

@@ -191,7 +191,7 @@ var _ = Describe("Storage Property-Based Tests", Label("property"), func() {
 						}
 
 						expectedDeleted := len(keySlice) / 2
-						for i := 0; i < expectedDeleted; i++ {
+						for i := range expectedDeleted {
 							err := client.Set(ctx, keySlice[i], []byte("value"))
 							if err != nil {
 								return false

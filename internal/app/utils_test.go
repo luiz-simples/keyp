@@ -49,7 +49,7 @@ var _ = Describe("Utils", func() {
 			It("should generate valid connection IDs consistently", func() {
 				connections := 10
 
-				for i := 0; i < connections; i++ {
+				for range connections {
 					mockConnTemp := NewMockConn(ctrl)
 					mockDispatcherTemp := NewMockDispatcher(ctrl)
 					mockPool.EXPECT().Get(gomock.Any()).Return(mockDispatcherTemp).Times(1)
@@ -63,7 +63,7 @@ var _ = Describe("Utils", func() {
 			It("should handle rapid connection generation", func() {
 				connections := 50
 
-				for i := 0; i < connections; i++ {
+				for range connections {
 					mockConnTemp := NewMockConn(ctrl)
 					mockDispatcherTemp := NewMockDispatcher(ctrl)
 					mockPool.EXPECT().Get(gomock.Any()).Return(mockDispatcherTemp).Times(1)

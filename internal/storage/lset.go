@@ -27,16 +27,16 @@ func (client *Client) LSet(ctx context.Context, key []byte, index int64, value [
 			return ErrKeyNotFound
 		}
 
-		if len(data) < integerSize {
+		if hasInvalidListHeader(data) {
 			return ErrKeyNotFound
 		}
 
 		length := int64(binary.LittleEndian.Uint64(data[:integerSize]))
-		if index < firstElement {
+		if isNegativeIndex(index) {
 			index = length + index
 		}
 
-		if index < firstElement || index >= length {
+		if isIndexOutOfBounds(index, length) {
 			return ErrKeyNotFound
 		}
 
@@ -44,8 +44,9 @@ func (client *Client) LSet(ctx context.Context, key []byte, index int64, value [
 		binary.LittleEndian.PutUint64(newData, uint64(length))
 
 		offset := integerSize
+
 		for i := int64(firstElement); i < length; i++ {
-			if offset+itemLengthSize > len(data) {
+			if hasInsufficientData(data, offset, itemLengthSize) {
 				return ErrKeyNotFound
 			}
 
@@ -57,15 +58,16 @@ func (client *Client) LSet(ctx context.Context, key []byte, index int64, value [
 				binary.LittleEndian.PutUint32(newData[len(newData)-itemLengthSize:], uint32(len(value)))
 				newData = append(newData, value...)
 				offset += itemLen
-			} else {
-				if offset+itemLen > len(data) {
-					return ErrKeyNotFound
-				}
-				newData = append(newData, make([]byte, itemLengthSize)...)
-				binary.LittleEndian.PutUint32(newData[len(newData)-itemLengthSize:], uint32(itemLen))
-				newData = append(newData, data[offset:offset+itemLen]...)
-				offset += itemLen
+				continue
 			}
+
+			if hasInsufficientData(data, offset, itemLen) {
+				return ErrKeyNotFound
+			}
+			newData = append(newData, make([]byte, itemLengthSize)...)
+			binary.LittleEndian.PutUint32(newData[len(newData)-itemLengthSize:], uint32(itemLen))
+			newData = append(newData, data[offset:offset+itemLen]...)
+			offset += itemLen
 		}
 
 		return txn.Put(db, key, newData, noFlags)

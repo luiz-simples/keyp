@@ -3,8 +3,8 @@ package service
 import "github.com/luiz-simples/keyp.git/internal/domain"
 
 func (handler *Handler) set(args Args) *Result {
-	key := args[firstArg]
-	value := args[secondArg]
+	key := args[domain.FirstArg]
+	value := args[domain.SecondArg]
 
 	res := domain.NewResult()
 	res.Error = handler.storage.Set(handler.context, key, value)

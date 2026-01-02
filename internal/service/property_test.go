@@ -271,7 +271,7 @@ var _ = Describe("Handler Property-Based Tests", func() {
 					}
 
 					args := make([][]byte, argCount)
-					for i := 0; i < argCount; i++ {
+					for i := range argCount {
 						args[i] = []byte(fmt.Sprintf("arg%d", i))
 					}
 
@@ -287,9 +287,9 @@ var _ = Describe("Handler Property-Based Tests", func() {
 
 					if argCount == 3 {
 						return true
-					} else {
-						return results[0].Error != nil
 					}
+
+					return results[0].Error != nil
 				},
 				gen.IntRange(0, 10),
 			)

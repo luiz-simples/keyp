@@ -8,8 +8,8 @@ import (
 
 func (handler *Handler) lpush(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	values := args[secondArg:]
+	key := args[domain.FirstArg]
+	values := args[domain.SecondArg:]
 
 	length := handler.storage.LPush(handler.context, key, values...)
 

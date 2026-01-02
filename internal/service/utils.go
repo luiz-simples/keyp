@@ -4,31 +4,10 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/luiz-simples/keyp.git/internal/domain"
-)
-
-var (
-	PONG   []byte = []byte("PONG")
-	QUEUED []byte = []byte("QUEUED")
-
-	EMPTY error = errors.New("ERR empty command")
-
-	ErrInvalidInteger = errors.New("ERR value is not an integer or out of range")
-	ErrInvalidFloat   = errors.New("ERR value is not a valid float")
-)
-
-const (
-	PING    string = "PING"
-	MULTI   string = "MULTI"
-	EXEC    string = "EXEC"
-	DISCARD string = "DISCARD"
-
-	noArgs    = 0
-	firstArg  = 1
-	secondArg = 2
-	thirdArg  = 3
 )
 
 func hasError(err error) bool {
@@ -36,7 +15,7 @@ func hasError(err error) bool {
 }
 
 func emptyArgs(args Args) bool {
-	return len(args) == noArgs
+	return len(args) == domain.EmptyArgs
 }
 
 func isKeyNotFoundError(err error) bool {
@@ -84,4 +63,27 @@ func encodeArray(items [][]byte) []byte {
 	}
 
 	return response
+}
+
+func processIntegerModification(args Args, storageMethod func(context.Context, []byte, int64) (int64, error), handler *Handler) *Result {
+	res := domain.NewResult()
+	key := args[domain.FirstArg]
+	valueStr := string(args[domain.SecondArg])
+
+	value, err := strconv.ParseInt(valueStr, 10, 64)
+	if hasError(err) {
+		res.Error = domain.ErrInvalidInteger
+		return res
+	}
+
+	result, err := storageMethod(handler.context, key, value)
+	if hasError(err) {
+		res.Error = err
+		return res
+	}
+
+	res.Response = make([]byte, 8)
+	binary.LittleEndian.PutUint64(res.Response, uint64(result))
+
+	return res
 }

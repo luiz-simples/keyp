@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"time"
 
@@ -87,6 +88,14 @@ func isIndexOutOfBounds(index, length int64) bool {
 	return index < 0 || index >= length
 }
 
+func hasInvalidListHeader(data []byte) bool {
+	return len(data) < integerSize
+}
+
+func hasInsufficientData(data []byte, offset, size int) bool {
+	return offset+size > len(data)
+}
+
 func ctxFlush(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
@@ -108,4 +117,50 @@ func setTimeout(secs uint32, fn func()) func() {
 	return func() {
 		running = false
 	}
+}
+
+func modifyIntegerBy(client *Client, ctx context.Context, key []byte, delta int64, operation func(int64, int64) int64) (int64, error) {
+	if hasError(ctxFlush(ctx)) {
+		return emptyCount, ErrContextCanceled
+	}
+
+	if isEmpty(key) {
+		return emptyCount, ErrKeyNotFound
+	}
+
+	db, err := client.sel(ctx)
+	if hasError(err) {
+		return emptyCount, err
+	}
+
+	var result int64
+
+	err = client.env.Update(func(txn *lmdb.Txn) error {
+		data, txnErr := txn.Get(db, key)
+
+		if isNotFound(txnErr) {
+			result = operation(emptyCount, delta)
+			newValue := strconv.FormatInt(result, 10)
+			return txn.Put(db, key, []byte(newValue), noFlags)
+		}
+
+		if hasError(txnErr) {
+			return txnErr
+		}
+
+		parsedValue, parseErr := strconv.ParseInt(string(data), 10, 64)
+		if hasError(parseErr) {
+			return ErrNotInteger
+		}
+
+		result = operation(parsedValue, delta)
+		newValue := strconv.FormatInt(result, 10)
+		return txn.Put(db, key, []byte(newValue), noFlags)
+	})
+
+	if hasError(err) {
+		return emptyCount, err
+	}
+
+	return result, nil
 }

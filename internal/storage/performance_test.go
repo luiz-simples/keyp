@@ -132,13 +132,13 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 					keys := make([][]byte, batchSize)
 					values := make([][]byte, batchSize)
 
-					for i := 0; i < batchSize; i++ {
+					for i := range batchSize {
 						keys[i] = []byte(fmt.Sprintf("batch-set-key-%d-%d", idx, i))
 						values[i] = []byte(fmt.Sprintf("batch-set-value-%d-%d", idx, i))
 					}
 
 					experiment.MeasureDuration("BatchSET", func() {
-						for i := 0; i < batchSize; i++ {
+						for i := range batchSize {
 							err := client.Set(ctx, keys[i], values[i])
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -157,7 +157,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 				keys := make([][]byte, batchSize)
 				values := make([][]byte, batchSize)
 
-				for i := 0; i < batchSize; i++ {
+				for i := range batchSize {
 					keys[i] = []byte(fmt.Sprintf("batch-get-key-%d", i))
 					values[i] = []byte(fmt.Sprintf("batch-get-value-%d", i))
 					err := client.Set(ctx, keys[i], values[i])
@@ -166,7 +166,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 
 				experiment.Sample(func(idx int) {
 					experiment.MeasureDuration("BatchGET", func() {
-						for i := 0; i < batchSize; i++ {
+						for i := range batchSize {
 							result, err := client.Get(ctx, keys[i])
 							Expect(err).NotTo(HaveOccurred())
 							Expect(result).To(Equal(values[i]))
@@ -186,7 +186,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 					const batchSize = 100
 					keys := make([][]byte, batchSize)
 
-					for i := 0; i < batchSize; i++ {
+					for i := range batchSize {
 						keys[i] = []byte(fmt.Sprintf("batch-del-key-%d-%d", idx, i))
 						err := client.Set(ctx, keys[i], []byte("value"))
 						Expect(err).NotTo(HaveOccurred())
@@ -244,10 +244,10 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 					experiment.MeasureDuration("ConcurrentOps", func() {
 						done := make(chan bool, numGoroutines)
 
-						for i := 0; i < numGoroutines; i++ {
+						for i := range numGoroutines {
 							go func(goroutineID int) {
 								defer GinkgoRecover()
-								for j := 0; j < opsPerGoroutine; j++ {
+								for j := range opsPerGoroutine {
 									key := []byte(fmt.Sprintf("concurrent-key-%d-%d-%d", idx, goroutineID, j))
 									value := []byte(fmt.Sprintf("concurrent-value-%d-%d-%d", idx, goroutineID, j))
 
@@ -262,7 +262,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 							}(i)
 						}
 
-						for i := 0; i < numGoroutines; i++ {
+						for range numGoroutines {
 							<-done
 						}
 					})
@@ -284,7 +284,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 
 				start := time.Now()
 
-				for i := 0; i < numKeys; i++ {
+				for i := range numKeys {
 					key := []byte(fmt.Sprintf("%s%d", keyPrefix, i))
 					err := client.Set(ctx, key, value)
 					Expect(err).NotTo(HaveOccurred())
@@ -295,7 +295,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 
 				start = time.Now()
 
-				for i := 0; i < numKeys; i++ {
+				for i := range numKeys {
 					key := []byte(fmt.Sprintf("%s%d", keyPrefix, i))
 					result, err := client.Get(ctx, key)
 					Expect(err).NotTo(HaveOccurred())
@@ -314,7 +314,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 				const valueSize = 1024 * 10
 
 				largeValues := make([][]byte, numLargeValues)
-				for i := 0; i < numLargeValues; i++ {
+				for i := range numLargeValues {
 					largeValues[i] = make([]byte, valueSize)
 					for j := range largeValues[i] {
 						largeValues[i][j] = byte((i + j) % 256)
@@ -323,7 +323,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 
 				start := time.Now()
 
-				for i := 0; i < numLargeValues; i++ {
+				for i := range numLargeValues {
 					key := []byte(fmt.Sprintf("large-key-%d", i))
 					err := client.Set(ctx, key, largeValues[i])
 					Expect(err).NotTo(HaveOccurred())
@@ -334,7 +334,7 @@ var _ = Describe("Storage Performance Tests", Label("performance"), func() {
 
 				start = time.Now()
 
-				for i := 0; i < numLargeValues; i++ {
+				for i := range numLargeValues {
 					key := []byte(fmt.Sprintf("large-key-%d", i))
 					result, err := client.Get(ctx, key)
 					Expect(err).NotTo(HaveOccurred())
@@ -398,7 +398,7 @@ func BenchmarkStorageSet(b *testing.B) {
 	value := []byte("benchmark-value")
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		err := client.Set(ctx, key, value)
 		if err != nil {
 			b.Fatal(err)
@@ -426,7 +426,7 @@ func BenchmarkStorageGet(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, err := client.Get(ctx, key)
 		if err != nil {
 			b.Fatal(err)
@@ -447,7 +447,7 @@ func BenchmarkStorageDel(b *testing.B) {
 	ctx := context.WithValue(context.Background(), domain.DB, uint8(0))
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		key := []byte(fmt.Sprintf("benchmark-key-%d", i))
 		value := []byte("benchmark-value")
 
@@ -476,7 +476,7 @@ func BenchmarkStorageMixed(b *testing.B) {
 	ctx := context.WithValue(context.Background(), domain.DB, uint8(0))
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		key := []byte(fmt.Sprintf("mixed-key-%d", i))
 		value := []byte(fmt.Sprintf("mixed-value-%d", i))
 

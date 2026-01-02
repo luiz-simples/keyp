@@ -8,8 +8,8 @@ import (
 
 func (handler *Handler) sismember(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	member := args[secondArg]
+	key := args[domain.FirstArg]
+	member := args[domain.SecondArg]
 
 	exists := handler.storage.SIsMember(handler.context, key, member)
 

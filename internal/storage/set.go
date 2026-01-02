@@ -6,7 +6,7 @@ import (
 	"github.com/PowerDNS/lmdb-go/lmdb"
 )
 
-func (client *Client) Set(ctx context.Context, key []byte, val []byte) error {
+func (client *Client) Set(ctx context.Context, key, val []byte) error {
 	db, err := client.sel(ctx)
 
 	if isEmpty(err) {

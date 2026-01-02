@@ -8,8 +8,8 @@ import (
 
 func (handler *Handler) lindex(args Args) *Result {
 	res := domain.NewResult()
-	key := args[firstArg]
-	indexInt, _ := strconv.ParseInt(string(args[secondArg]), 10, 64)
+	key := args[domain.FirstArg]
+	indexInt, _ := strconv.ParseInt(string(args[domain.SecondArg]), 10, 64)
 
 	value, err := handler.storage.LIndex(handler.context, key, indexInt)
 	if hasError(err) {

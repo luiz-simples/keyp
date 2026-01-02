@@ -93,7 +93,7 @@ var _ = Describe("Server", func() {
 			It("should generate unique connection contexts", func() {
 				connections := 5
 
-				for i := 0; i < connections; i++ {
+				for range connections {
 					mockConnTemp := NewMockConn(ctrl)
 					mockDispatcherTemp := NewMockDispatcher(ctrl)
 					mockPool.EXPECT().Get(gomock.Any()).Return(mockDispatcherTemp).Times(1)

@@ -7,7 +7,7 @@ import (
 )
 
 func (handler *Handler) del(args Args) *Result {
-	keys := args[firstArg:]
+	keys := args[domain.FirstArg:]
 	deleted, err := handler.storage.Del(handler.context, keys...)
 	res := domain.NewResult()
 
