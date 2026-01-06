@@ -1,22 +1,20 @@
 package service
 
 import (
-	"encoding/binary"
-
 	"github.com/luiz-simples/keyp.git/internal/domain"
 )
 
 func (handler *Handler) exists(args Args) *Result {
 	res := domain.NewResult()
-	key := args[domain.FirstArg]
-	exists := handler.storage.Exists(handler.context, key)
+	keys := args[domain.FirstArg:]
+	count := int64(0)
 
-	res.Response = make([]byte, 4)
-	value := uint32(0)
-	if exists {
-		value = 1
+	for _, key := range keys {
+		if handler.storage.Exists(handler.context, key) {
+			count++
+		}
 	}
-	binary.LittleEndian.PutUint32(res.Response, value)
 
+	res.Response = formatInt64(count)
 	return res
 }

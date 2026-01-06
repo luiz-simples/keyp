@@ -12,7 +12,7 @@ func (handler *Handler) get(args Args) *Result {
 	}
 
 	if isKeyNotFoundError(res.Error) {
-		return res.Clear()
+		return res.SetNil()
 	}
 
 	return res

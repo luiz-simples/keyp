@@ -14,6 +14,7 @@ var (
 	ErrCanceled       error = errors.New("ERR operation canceled")
 	ErrInvalidFloat   error = errors.New("ERR value is not a valid float")
 	ErrInvalidInteger error = errors.New("ERR value is not an integer or out of range")
+	ErrWrongType      error = errors.New("WRONGTYPE Operation against a key holding the wrong kind of value")
 )
 
 const (
@@ -22,10 +23,11 @@ const (
 	EXEC    string = "EXEC"
 	DISCARD string = "DISCARD"
 
-	EmptyArgs = 0
-	FirstArg  = 1
-	SecondArg = 2
-	ThirdArg  = 3
+	EmptyArgs  = 0
+	CommandArg = 0
+	FirstArg   = 1
+	SecondArg  = 2
+	ThirdArg   = 3
 )
 
 type (
@@ -45,7 +47,7 @@ type (
 		Del(context.Context, ...[]byte) (uint32, error)
 
 		TTL(context.Context, []byte) uint32
-		Persist(context.Context, []byte)
+		Persist(context.Context, []byte) bool
 		Expire(context.Context, []byte, uint32)
 
 		Exists(context.Context, []byte) bool

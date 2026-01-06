@@ -11,6 +11,18 @@ func (result *Result) SetCanceled() *Result {
 	return result
 }
 
+func (result *Result) SetEmpty() *Result {
+	result.Error = ErrEmpty
+	result.Response = nil
+	return result
+}
+
+func (result *Result) SetNil() *Result {
+	result.Error = nil
+	result.Response = nil
+	return result
+}
+
 func (result *Result) Clear() *Result {
 	result.Error = nil
 	result.Response = nil

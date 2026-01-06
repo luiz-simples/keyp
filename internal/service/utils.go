@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/binary"
 	"errors"
 	"strconv"
 	"strings"
@@ -12,6 +11,10 @@ import (
 
 func hasError(err error) bool {
 	return err != nil
+}
+
+func noError(err error) bool {
+	return err == nil
 }
 
 func emptyArgs(args Args) bool {
@@ -46,25 +49,6 @@ func isValid(validation *domain.Validation, cmdName string, argCount int) error 
 	return nil
 }
 
-func encodeArray(items [][]byte) []byte {
-	if len(items) == 0 {
-		response := make([]byte, 8)
-		binary.LittleEndian.PutUint64(response, 0)
-		return response
-	}
-
-	response := make([]byte, 8)
-	binary.LittleEndian.PutUint64(response, uint64(len(items)))
-
-	for _, item := range items {
-		response = append(response, make([]byte, 4)...)
-		binary.LittleEndian.PutUint32(response[len(response)-4:], uint32(len(item)))
-		response = append(response, item...)
-	}
-
-	return response
-}
-
 func processIntegerModification(args Args, storageMethod func(context.Context, []byte, int64) (int64, error), handler *Handler) *Result {
 	res := domain.NewResult()
 	key := args[domain.FirstArg]
@@ -82,8 +66,35 @@ func processIntegerModification(args Args, storageMethod func(context.Context, [
 		return res
 	}
 
-	res.Response = make([]byte, 8)
-	binary.LittleEndian.PutUint64(res.Response, uint64(result))
-
+	res.Response = formatInt64(result)
 	return res
+}
+
+func formatInt64(value int64) []byte {
+	return []byte(strconv.FormatInt(value, 10))
+}
+
+func formatUint32(value uint32) []byte {
+	return []byte(strconv.FormatUint(uint64(value), 10))
+}
+
+func formatBool(value bool) []byte {
+	if value {
+		return []byte("1")
+	}
+	return []byte("0")
+}
+
+func formatArray(items [][]byte) []byte {
+	if len(items) == 0 {
+		return []byte("*0\r\n")
+	}
+
+	result := []byte("*" + strconv.Itoa(len(items)) + "\r\n")
+	for _, item := range items {
+		result = append(result, []byte("$"+strconv.Itoa(len(item))+"\r\n")...)
+		result = append(result, item...)
+		result = append(result, []byte("\r\n")...)
+	}
+	return result
 }

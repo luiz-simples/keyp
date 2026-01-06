@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/luiz-simples/keyp.git/internal/domain"
+	"time"
 
-	"github.com/bwmarrin/snowflake"
+	"github.com/luiz-simples/keyp.git/internal/domain"
 )
 
 func hasError(err error) bool {
@@ -11,20 +11,18 @@ func hasError(err error) bool {
 }
 
 func hasResponse(response []byte) bool {
-	return len(response) > 0
+	return response != nil
 }
 
 func generateConnectionID() int64 {
-	node, _ := snowflake.NewNode(1)
-	return node.Generate().Int64()
-}
-
-func contextExists(contexts map[int64]func(), connID int64) bool {
-	_, exists := contexts[connID]
-	return exists
+	return time.Now().UnixNano()
 }
 
 func handlerExists(handlers map[int64]domain.Dispatcher, connID int64) bool {
 	_, exists := handlers[connID]
 	return exists
+}
+
+func isArrayResponse(response []byte) bool {
+	return len(response) > 0 && response[0] == '*'
 }

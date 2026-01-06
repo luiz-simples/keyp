@@ -40,6 +40,7 @@ func NewHandler(storage domain.Persister) *Handler {
 		"GET": handler.get,
 		"SET": handler.set,
 		"SEL": handler.sel,
+		"DO":  handler.do,
 
 		"TTL":     handler.ttl,
 		"EXPIRE":  handler.expire,
@@ -79,14 +80,15 @@ func NewHandler(storage domain.Persister) *Handler {
 	handler.validations = domain.Validations{
 		"DEL": {MinArgs: 2, MaxArgs: -1},
 		"GET": {MinArgs: 2, MaxArgs: 2},
-		"SET": {MinArgs: 3, MaxArgs: 3},
+		"SET": {MinArgs: 3, MaxArgs: 5},
 		"SEL": {MinArgs: 2, MaxArgs: 2},
+		"DO":  {MinArgs: 2, MaxArgs: -1},
 
 		"TTL":     {MinArgs: 2, MaxArgs: 2},
 		"EXPIRE":  {MinArgs: 3, MaxArgs: 3},
 		"PERSIST": {MinArgs: 2, MaxArgs: 2},
 
-		"EXISTS": {MinArgs: 2, MaxArgs: 2},
+		"EXISTS": {MinArgs: 2, MaxArgs: 0},
 		"LLEN":   {MinArgs: 2, MaxArgs: 2},
 		"LINDEX": {MinArgs: 3, MaxArgs: 3},
 		"LSET":   {MinArgs: 4, MaxArgs: 4},

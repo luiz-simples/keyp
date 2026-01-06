@@ -12,6 +12,7 @@ var (
 	ErrKeyNotFound     = errors.New("key not found")
 	ErrNotInteger      = errors.New("value is not an integer or out of range")
 	ErrContextCanceled = errors.New("context canceled")
+	ErrWrongType       = errors.New("WRONGTYPE Operation against a key holding the wrong kind of value")
 )
 
 const (
@@ -46,19 +47,19 @@ func NewClient(dataDir string) (*Client, error) {
 
 	env, err := lmdb.NewEnv()
 
-	if isEmpty(err) {
+	if noError(err) {
 		err = env.SetMaxDBs(maxDatabases + 1)
 	}
 
-	if isEmpty(err) {
+	if noError(err) {
 		err = env.SetMapSize(mapSizeBytes)
 	}
 
-	if isEmpty(err) {
+	if noError(err) {
 		err = env.SetMaxReaders(128)
 	}
 
-	if isEmpty(err) {
+	if noError(err) {
 		err = env.Open(dataDir, performFlags, filePerm)
 	}
 

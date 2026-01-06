@@ -30,6 +30,6 @@ func (handler *Handler) zrange(args Args) *Result {
 		return res
 	}
 
-	res.Response = encodeArray(members)
+	res.Response = formatArray(members)
 	return res
 }

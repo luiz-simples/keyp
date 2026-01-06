@@ -1,132 +1,111 @@
+version: "2"
 run:
-  timeout: 3m
-  tests: true
   go: "1.25"
-
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: false
-
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-
-  gocyclo:
-    min-complexity: 15
-
-  funlen:
-    lines: 60
-    statements: 40
-
-  gocognit:
-    min-complexity: 20
-
-  lll:
-    line-length: 230
-
-  unused:
-    check-exported: true
-
-  unparam:
-    check-exported: true
-
-  goimports:
-    local-prefixes: github.com/luiz-simples/keyp.git
-
-  dupl:
-    threshold: 100
-
-  gofmt:
-    simplify: true
-
-  gofumpt:
-    extra-rules: true
-
-  revive:
-    rules:
-      - name: early-return
-        severity: error
-        disabled: false
-      - name: indent-error-flow
-        severity: error
-        disabled: false
-      - name: superfluous-else
-        severity: error
-        disabled: false
-
-  gocritic:
-    disabled-checks:
-      - exitAfterDefer
-    settings:
-      ifElseChain:
-        minThreshold: 2
-
-  intrange:
-    always: true
-
-  godot:
-    scope: declarations
-    exclude: []
-    period: true
-    capital: true
-
-  godox:
-    keywords:
-      - TODO
-      - FIXME
-      - BUG
-      - HACK
-      - NOTE
-      - XXX
-      - OPTIMIZE
-      - REVIEW
-      - "//"
-
+  tests: true
 linters:
-  disable-all: true
+  default: none
   enable:
-    - errcheck
     - dupl
+    - errcheck
     - gocritic
     - godot
     - godox
-    - gofmt
-    - gofumpt
-    - goimports
-    - gosimple
     - govet
     - ineffassign
     - intrange
     - misspell
     - revive
     - staticcheck
-    - typecheck
     - unconvert
     - unused
-
+  settings:
+    dupl:
+      threshold: 100
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+    funlen:
+      lines: 60
+      statements: 40
+    gocognit:
+      min-complexity: 20
+    gocritic:
+      disabled-checks:
+        - exitAfterDefer
+      settings:
+        ifElseChain:
+          minThreshold: 2
+    gocyclo:
+      min-complexity: 15
+    godot:
+      scope: declarations
+      capital: true
+      period: true
+    godox:
+      keywords:
+        - TODO
+        - FIXME
+        - BUG
+        - HACK
+        - NOTE
+        - XXX
+        - OPTIMIZE
+        - REVIEW
+        - //
+    govet:
+      disable:
+        - fieldalignment
+      enable-all: true
+    lll:
+      line-length: 230
+    revive:
+      rules:
+        - name: early-return
+          severity: error
+          disabled: false
+        - name: indent-error-flow
+          severity: error
+          disabled: false
+        - name: superfluous-else
+          severity: error
+          disabled: false
+    unparam:
+      check-exported: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - dupl
+          - errcheck
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
-        - dupl
-        # - gocritic
-        # - godot
-        # - godox
-        # - gofmt
-        # - gofumpt
-        # - goimports
-        # - gosimple
-        # - govet
-        # - ineffassign
-        # - intrange
-        # - misspell
-        # - revive
-        # - staticcheck
-        # - typecheck
-        # - unconvert
-        # - unused
   max-issues-per-linter: 0
   max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+    gofumpt:
+      extra-rules: true
+    goimports:
+      local-prefixes:
+        - github.com/luiz-simples/keyp.git
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

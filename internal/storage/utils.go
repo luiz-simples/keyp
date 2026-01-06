@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"encoding/binary"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +31,10 @@ func hasError(err error) bool {
 	return err != nil
 }
 
+func noError(err error) bool {
+	return err == nil
+}
+
 func isEmpty(data any) bool {
 	str, isStr := data.(string)
 
@@ -53,7 +58,7 @@ func isEmpty(data any) bool {
 }
 
 func isNotFound(err error) bool {
-	if isEmpty(err) {
+	if noError(err) {
 		return false
 	}
 
@@ -117,6 +122,108 @@ func setTimeout(secs uint32, fn func()) func() {
 	return func() {
 		running = false
 	}
+}
+
+func isListData(data []byte) bool {
+	if len(data) < integerSize {
+		return false
+	}
+
+	length := int64(binary.LittleEndian.Uint64(data[:integerSize]))
+
+	if length < 0 {
+		return false
+	}
+
+	expectedSize := integerSize
+	offset := integerSize
+
+	for range length {
+		if offset+itemLengthSize > len(data) {
+			return false
+		}
+
+		itemLength := int(binary.LittleEndian.Uint32(data[offset : offset+itemLengthSize]))
+		offset += itemLengthSize
+
+		if offset+itemLength > len(data) {
+			return false
+		}
+
+		offset += itemLength
+		expectedSize += itemLengthSize + itemLength
+	}
+
+	return expectedSize == len(data)
+}
+
+func isStringData(data []byte) bool {
+	return !isListData(data) && !isSetData(data) && !isSortedSetData(data)
+}
+
+func isSetData(data []byte) bool {
+	return hasValidSetHeader(data)
+}
+
+func isSortedSetData(data []byte) bool {
+	return hasValidSortedSetHeader(data)
+}
+
+func (client *Client) checkKeyType(ctx context.Context, key []byte, expectedType string) error {
+	if hasError(ctxFlush(ctx)) {
+		return ErrContextCanceled
+	}
+
+	if isEmpty(key) {
+		return nil
+	}
+
+	db, err := client.sel(ctx)
+	if hasError(err) {
+		return err
+	}
+
+	var checkErr error
+
+	err = client.env.View(func(txn *lmdb.Txn) error {
+		data, txnErr := txn.Get(db, key)
+
+		if isNotFound(txnErr) {
+			return nil
+		}
+
+		if hasError(txnErr) {
+			return txnErr
+		}
+
+		if expectedType == "list" && !isListData(data) {
+			checkErr = ErrWrongType
+			return nil
+		}
+
+		if expectedType == "string" && !isStringData(data) {
+			checkErr = ErrWrongType
+			return nil
+		}
+
+		if expectedType == "set" && !isSetData(data) {
+			checkErr = ErrWrongType
+			return nil
+		}
+
+		if expectedType == "zset" && !isSortedSetData(data) {
+			checkErr = ErrWrongType
+			return nil
+		}
+
+		return nil
+	})
+
+	if hasError(err) {
+		return err
+	}
+
+	return checkErr
 }
 
 func modifyIntegerBy(client *Client, ctx context.Context, key []byte, delta int64, operation func(int64, int64) int64) (int64, error) {

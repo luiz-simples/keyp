@@ -16,6 +16,10 @@ func (client *Client) RPush(ctx context.Context, key []byte, values ...[]byte) i
 		return emptyCount
 	}
 
+	if hasError(client.checkKeyType(ctx, key, "list")) {
+		return emptyCount
+	}
+
 	db, err := client.sel(ctx)
 	if hasError(err) {
 		return emptyCount

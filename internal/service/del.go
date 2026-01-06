@@ -1,12 +1,16 @@
 package service
 
 import (
-	"encoding/binary"
-
 	"github.com/luiz-simples/keyp.git/internal/domain"
 )
 
 func (handler *Handler) del(args Args) *Result {
+	if len(args) < 2 {
+		res := domain.NewResult()
+		res.Error = newInvalidArgsError("DEL")
+		return res
+	}
+
 	keys := args[domain.FirstArg:]
 	deleted, err := handler.storage.Del(handler.context, keys...)
 	res := domain.NewResult()
@@ -15,8 +19,6 @@ func (handler *Handler) del(args Args) *Result {
 		return res.SetCanceled()
 	}
 
-	res.Response = make([]byte, 4)
-	binary.LittleEndian.PutUint32(res.Response, deleted)
-
+	res.Response = formatUint32(deleted)
 	return res
 }

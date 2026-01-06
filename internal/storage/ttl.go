@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	"github.com/luiz-simples/keyp.git/internal/domain"
 )
@@ -24,5 +25,10 @@ func (client *Client) TTL(ctx context.Context, keyBytes []byte) uint32 {
 		return 0
 	}
 
-	return ttl.Expire
+	now := uint32(time.Now().Unix())
+	if ttl.Expire <= now {
+		return 0
+	}
+
+	return ttl.Expire - now
 }

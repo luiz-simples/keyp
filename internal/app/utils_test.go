@@ -86,8 +86,12 @@ var _ = Describe("Utils", func() {
 
 				mockPool.EXPECT().Get(gomock.Any()).Return(mockDispatcher1).Times(1)
 				mockPool.EXPECT().Get(gomock.Any()).Return(mockDispatcher2).Times(1)
+
 				mockConn1.EXPECT().SetContext(gomock.Any()).Times(1)
 				mockConn2.EXPECT().SetContext(gomock.Any()).Times(1)
+
+				mockDispatcher1.EXPECT().Clear().Times(1)
+				mockDispatcher2.EXPECT().Clear().Times(1)
 
 				server.OnAccept(mockConn1)
 				server.OnAccept(mockConn2)

@@ -6,7 +6,7 @@ import (
 	"github.com/luiz-simples/keyp.git/internal/domain"
 )
 
-func (client *Client) Persist(ctx context.Context, keyBytes []byte) {
+func (client *Client) Persist(ctx context.Context, keyBytes []byte) bool {
 	client.mtx.Lock()
 	defer client.mtx.Unlock()
 
@@ -15,14 +15,16 @@ func (client *Client) Persist(ctx context.Context, keyBytes []byte) {
 	keys, hasKeys := client.ttl[db]
 
 	if !hasKeys {
-		return
+		return false
 	}
 
 	ttl := keys[key]
 
-	if ttl != nil {
-		ttl.Cancel()
+	if ttl == nil {
+		return false
 	}
 
+	ttl.Cancel()
 	delete(keys, key)
+	return true
 }

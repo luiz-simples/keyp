@@ -2,8 +2,8 @@ package service_test
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
+	"strconv"
 
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/gen"
@@ -108,8 +108,8 @@ var _ = Describe("Handler Property-Based Tests", func() {
 						return false
 					}
 
-					deletedCount := binary.LittleEndian.Uint32(delResults[0].Response)
-					if deletedCount != 1 {
+					deletedCount := string(delResults[0].Response)
+					if deletedCount != "1" {
 						return false
 					}
 
@@ -174,8 +174,8 @@ var _ = Describe("Handler Property-Based Tests", func() {
 						return false
 					}
 
-					deletedCount := binary.LittleEndian.Uint32(delResults[0].Response)
-					return int(deletedCount) == len(validKeys)
+					deletedCount := string(delResults[0].Response)
+					return deletedCount == strconv.Itoa(len(validKeys))
 				},
 				gen.SliceOf(gen.AlphaString().SuchThat(func(s string) bool { return len(s) < 50 })).
 					SuchThat(func(slice []string) bool { return len(slice) <= 10 }),
@@ -285,8 +285,8 @@ var _ = Describe("Handler Property-Based Tests", func() {
 						return false
 					}
 
-					if argCount == 3 {
-						return true
+					if argCount >= 3 && argCount <= 5 {
+						return results[0].Error == nil
 					}
 
 					return results[0].Error != nil

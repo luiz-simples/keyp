@@ -1,8 +1,6 @@
 package service
 
 import (
-	"encoding/binary"
-
 	"github.com/luiz-simples/keyp.git/internal/domain"
 )
 
@@ -12,13 +10,6 @@ func (handler *Handler) sismember(args Args) *Result {
 	member := args[domain.SecondArg]
 
 	exists := handler.storage.SIsMember(handler.context, key, member)
-
-	res.Response = make([]byte, 4)
-	value := uint32(0)
-	if exists {
-		value = 1
-	}
-	binary.LittleEndian.PutUint32(res.Response, value)
-
+	res.Response = formatBool(exists)
 	return res
 }

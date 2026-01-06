@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/binary"
 	"strconv"
 
 	"github.com/luiz-simples/keyp.git/internal/domain"
@@ -26,9 +25,6 @@ func (handler *Handler) zcount(args Args) *Result {
 	}
 
 	count := handler.storage.ZCount(handler.context, key, min, max)
-
-	res.Response = make([]byte, 8)
-	binary.LittleEndian.PutUint64(res.Response, uint64(count))
-
+	res.Response = formatInt64(count)
 	return res
 }

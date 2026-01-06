@@ -26,5 +26,5 @@ func (client *Client) Exists(ctx context.Context, key []byte) bool {
 		return txnErr
 	})
 
-	return isEmpty(err)
+	return noError(err)
 }

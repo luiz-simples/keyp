@@ -11,7 +11,7 @@ const EMPTY = uint32(0)
 func (client *Client) Del(ctx context.Context, keys ...[]byte) (uint32, error) {
 	db, err := client.sel(ctx)
 
-	if isEmpty(err) {
+	if noError(err) {
 		err = ctxFlush(ctx)
 	}
 
@@ -33,7 +33,7 @@ func (client *Client) Del(ctx context.Context, keys ...[]byte) (uint32, error) {
 		for _, key := range keys {
 			delErr := txn.Del(db, key, nil)
 
-			if isEmpty(delErr) {
+			if noError(delErr) {
 				deleted++
 				continue
 			}

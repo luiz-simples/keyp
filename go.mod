@@ -4,7 +4,6 @@ go 1.25
 
 require (
 	github.com/PowerDNS/lmdb-go v1.9.3
-	github.com/bwmarrin/snowflake v0.3.0
 	github.com/leanovate/gopter v0.2.11
 	github.com/onsi/ginkgo/v2 v2.27.3
 	github.com/onsi/gomega v1.38.3

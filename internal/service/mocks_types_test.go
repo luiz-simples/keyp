@@ -295,9 +295,11 @@ func (mr *MockPersisterMockRecorder) LSet(arg0, arg1, arg2, arg3 any) *gomock.Ca
 }
 
 // Persist mocks base method.
-func (m *MockPersister) Persist(arg0 context.Context, arg1 []byte) {
+func (m *MockPersister) Persist(arg0 context.Context, arg1 []byte) bool {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Persist", arg0, arg1)
+	ret := m.ctrl.Call(m, "Persist", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	return ret0
 }
 
 // Persist indicates an expected call of Persist.

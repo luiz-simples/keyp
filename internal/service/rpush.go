@@ -1,8 +1,6 @@
 package service
 
 import (
-	"encoding/binary"
-
 	"github.com/luiz-simples/keyp.git/internal/domain"
 )
 
@@ -13,8 +11,14 @@ func (handler *Handler) rpush(args Args) *Result {
 
 	length := handler.storage.RPush(handler.context, key, values...)
 
-	res.Response = make([]byte, 8)
-	binary.LittleEndian.PutUint64(res.Response, uint64(length))
+	if length == 0 {
+		data, err := handler.storage.Get(handler.context, key)
+		if noError(err) && len(data) > 0 {
+			res.Error = domain.ErrWrongType
+			return res
+		}
+	}
 
+	res.Response = formatInt64(length)
 	return res
 }

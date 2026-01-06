@@ -25,7 +25,7 @@ func NewPool(storage domain.Persister) *Pool {
 
 func (pool *Pool) Get(ctx context.Context) domain.Dispatcher {
 	handler, _ := pool.refs.Get().(*Handler)
-	handler.context = context.WithValue(ctx, domain.DB, uint8(0))
+	handler.context = ctx
 	return handler
 }
 

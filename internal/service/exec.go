@@ -5,9 +5,7 @@ func (handler *Handler) exec() Results {
 
 	if handler.multEnabled {
 		for _, args := range handler.multArgs {
-			cmdName := normalizeCommandName(string(args[0]))
-			command := handler.commands[cmdName]
-			results = append(results, command(args))
+			results = append(results, handler.do(args))
 		}
 	}
 

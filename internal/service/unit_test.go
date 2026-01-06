@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"encoding/binary"
 	"errors"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -217,9 +216,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				actualCount := binary.LittleEndian.Uint32(results[0].Response)
-				Expect(actualCount).To(Equal(expectedCount))
+				Expect(string(results[0].Response)).To(Equal("1"))
 			})
 		})
 
@@ -238,9 +235,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				actualCount := binary.LittleEndian.Uint32(results[0].Response)
-				Expect(actualCount).To(Equal(expectedCount))
+				Expect(string(results[0].Response)).To(Equal("2"))
 			})
 		})
 
@@ -329,13 +324,13 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				mockPersister.EXPECT().
 					Persist(gomock.Any(), key).
-					Return()
+					Return(true)
 
 				results := handler.Apply(ctx, args)
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-				Expect(results[0].Response).To(Equal([]byte("OK")))
+				Expect(results[0].Response).To(Equal([]byte("1")))
 			})
 		})
 	})
@@ -355,10 +350,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 4)
-				binary.LittleEndian.PutUint32(expectedResponse, expectedTTL)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("120"))
 			})
 		})
 
@@ -376,10 +368,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 4)
-				binary.LittleEndian.PutUint32(expectedResponse, expectedTTL)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("-1"))
 			})
 		})
 	})
@@ -432,18 +421,12 @@ var _ = Describe("Handler Unit Tests", func() {
 				key := []byte("testkey")
 				value := []byte("testvalue")
 
-				multiArgs := [][]byte{[]byte("MULTI")}
-				handler.Apply(ctx, multiArgs)
+				handler.Apply(ctx, [][]byte{[]byte("MULTI")})
 
-				setArgs := [][]byte{[]byte("SET"), key, value}
-				mockPersister.EXPECT().
-					Set(gomock.Any(), key, value).
-					Return(nil)
+				mockPersister.EXPECT().Set(gomock.Any(), key, value).Return(nil)
+				handler.Apply(ctx, [][]byte{[]byte("SET"), key, value})
 
-				handler.Apply(ctx, setArgs)
-
-				execArgs := [][]byte{[]byte("EXEC")}
-				results := handler.Apply(ctx, execArgs)
+				results := handler.Apply(ctx, [][]byte{[]byte("EXEC")})
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
@@ -568,10 +551,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 4)
-				binary.LittleEndian.PutUint32(expectedResponse, 1)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("1"))
 			})
 
 			It("should return 0 for non-existing key", func() {
@@ -586,10 +566,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 4)
-				binary.LittleEndian.PutUint32(expectedResponse, 0)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("0"))
 			})
 		})
 	})
@@ -609,10 +586,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedLength))
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("5"))
 			})
 
 			It("should return 0 for non-existing list", func() {
@@ -627,10 +601,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 0)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("0"))
 			})
 		})
 	})
@@ -726,10 +697,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedLength))
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("3"))
 			})
 
 			It("should push multiple elements", func() {
@@ -747,10 +715,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedLength))
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("5"))
 			})
 		})
 	})
@@ -771,10 +736,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedLength))
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("4"))
 			})
 		})
 	})
@@ -856,24 +818,8 @@ var _ = Describe("Handler Unit Tests", func() {
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
 
-				totalSize := 4
-				for _, value := range expectedValues {
-					totalSize += 4 + len(value)
-				}
-
-				expectedResponse := make([]byte, totalSize)
-				offset := 0
-				binary.LittleEndian.PutUint32(expectedResponse[offset:], uint32(len(expectedValues)))
-				offset += 4
-
-				for _, value := range expectedValues {
-					binary.LittleEndian.PutUint32(expectedResponse[offset:], uint32(len(value)))
-					offset += 4
-					copy(expectedResponse[offset:], value)
-					offset += len(value)
-				}
-
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				expectedRedisFormat := "*3\r\n$5\r\nelem1\r\n$5\r\nelem2\r\n$5\r\nelem3\r\n"
+				Expect(string(results[0].Response)).To(Equal(expectedRedisFormat))
 			})
 
 			It("should return empty array for non-existing key", func() {
@@ -890,10 +836,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 4)
-				binary.LittleEndian.PutUint32(expectedResponse, 0)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("*0\r\n"))
 			})
 		})
 	})
@@ -946,10 +889,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedCount))
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("1"))
 			})
 
 			It("should add multiple members", func() {
@@ -967,10 +907,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedCount))
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("2"))
 			})
 		})
 	})
@@ -991,10 +928,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(expectedCount))
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("1"))
 			})
 
 			It("should return 0 for non-existing member", func() {
@@ -1010,10 +944,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 0)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("0"))
 			})
 		})
 	})
@@ -1038,16 +969,8 @@ var _ = Describe("Handler Unit Tests", func() {
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
 
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(len(expectedMembers)))
-
-				for _, member := range expectedMembers {
-					expectedResponse = append(expectedResponse, make([]byte, 4)...)
-					binary.LittleEndian.PutUint32(expectedResponse[len(expectedResponse)-4:], uint32(len(member)))
-					expectedResponse = append(expectedResponse, member...)
-				}
-
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				expectedRedisFormat := "*3\r\n$7\r\nmember1\r\n$7\r\nmember2\r\n$7\r\nmember3\r\n"
+				Expect(string(results[0].Response)).To(Equal(expectedRedisFormat))
 			})
 
 			It("should return empty response for non-existing set", func() {
@@ -1062,10 +985,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 0)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("*0\r\n"))
 			})
 
 			It("should return error when operation fails", func() {
@@ -1100,10 +1020,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 4)
-				binary.LittleEndian.PutUint32(expectedResponse, 1)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("1"))
 			})
 
 			It("should return 0 for non-existing member", func() {
@@ -1119,10 +1036,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 4)
-				binary.LittleEndian.PutUint32(expectedResponse, 0)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("0"))
 			})
 		})
 	})
@@ -1143,10 +1057,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 1)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("1"))
 			})
 
 			It("should return error for invalid score", func() {
@@ -1185,16 +1096,8 @@ var _ = Describe("Handler Unit Tests", func() {
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
 
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, uint64(len(expectedMembers)))
-
-				for _, member := range expectedMembers {
-					expectedResponse = append(expectedResponse, make([]byte, 4)...)
-					binary.LittleEndian.PutUint32(expectedResponse[len(expectedResponse)-4:], uint32(len(member)))
-					expectedResponse = append(expectedResponse, member...)
-				}
-
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				expectedRedisFormat := "*3\r\n$7\r\nmember1\r\n$7\r\nmember2\r\n$7\r\nmember3\r\n"
+				Expect(string(results[0].Response)).To(Equal(expectedRedisFormat))
 			})
 
 			It("should return error for invalid start index", func() {
@@ -1227,10 +1130,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 5)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("5"))
 			})
 
 			It("should return error for invalid min score", func() {
@@ -1261,10 +1161,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 1)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("1"))
 			})
 
 			It("should return error when operation fails", func() {
@@ -1299,10 +1196,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 15)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("15"))
 			})
 
 			It("should return error for invalid increment", func() {
@@ -1332,10 +1226,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, ^uint64(0))
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("-1"))
 			})
 
 			It("should return error when operation fails", func() {
@@ -1370,10 +1261,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 7)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("7"))
 			})
 
 			It("should return error for invalid decrement", func() {
@@ -1404,10 +1292,7 @@ var _ = Describe("Handler Unit Tests", func() {
 
 				Expect(results).To(HaveLen(1))
 				Expect(results[0].Error).To(BeNil())
-
-				expectedResponse := make([]byte, 8)
-				binary.LittleEndian.PutUint64(expectedResponse, 10)
-				Expect(results[0].Response).To(Equal(expectedResponse))
+				Expect(string(results[0].Response)).To(Equal("10"))
 			})
 		})
 	})

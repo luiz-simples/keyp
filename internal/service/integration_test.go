@@ -28,6 +28,20 @@ var _ = Describe("Handler Integration Tests", func() {
 		testDir     string
 	)
 
+	// createRedisClient cria um cliente Redis com configurações otimizadas para testes
+	createRedisClient := func(addr string) *redis.Client {
+		return redis.NewClient(&redis.Options{
+			Addr:         addr,
+			PoolSize:     1,               // Usar apenas 1 conexão para evitar problems de pool
+			MinIdleConns: 0,               // Não manter conexões idle
+			MaxRetries:   1,               // Reduzir tentativas de retry
+			DialTimeout:  time.Second * 5, // Timeout para estabelecer conexão
+			ReadTimeout:  time.Second * 3, // Timeout para leitura
+			WriteTimeout: time.Second * 3, // Timeout para escrita
+			PoolTimeout:  time.Second * 4, // Timeout para obter conexão do pool
+		})
+	}
+
 	BeforeEach(func() {
 		ctx = context.Background()
 
@@ -75,15 +89,16 @@ var _ = Describe("Handler Integration Tests", func() {
 			conn.WriteBulk(result.Response)
 		}, nil, nil)
 
-		go func() {
+		ch := make(chan bool)
+
+		go func(chBool chan bool) {
+			chBool <- true
 			server.ListenAndServe()
-		}()
+		}(ch)
 
-		time.Sleep(100 * time.Millisecond)
+		<-ch
 
-		redisClient = redis.NewClient(&redis.Options{
-			Addr: "localhost:" + testPort,
-		})
+		redisClient = createRedisClient("localhost:" + testPort)
 
 		Eventually(func() error {
 			return redisClient.Ping(ctx).Err()
